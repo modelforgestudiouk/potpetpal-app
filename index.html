@@ -258,11 +258,33 @@
         // --- App State & Data ---
         
         const petOptions = {
-            'Cat': { emoji: '🐱', id: 'cat' },
-            'Mouse': { emoji: '🐭', id: 'mouse' },
-            'Gorilla': { emoji: '🦍', id: 'gorilla' },
-            'Giraffe': { emoji: '🦒', id: 'giraffe' }, 
-            'Beaver': { emoji: '🦫', id: 'beaver' }
+            'Cat': { emoji: '🐱', id: 'cat', sound: () => {
+                if (!audioInitialized) return;
+                animalSoundSynth.oscillator.type = 'triangle';
+                animalSoundSynth.triggerAttackRelease("E5", "16n", Tone.now());
+                animalSoundSynth.triggerAttackRelease("C5", "16n", Tone.now() + 0.1);
+            }},
+            'Mouse': { emoji: '🐭', id: 'mouse', sound: () => {
+                if (!audioInitialized) return;
+                animalSoundSynth.oscillator.type = 'sine';
+                animalSoundSynth.triggerAttackRelease("C7", "32n", Tone.now());
+            }},
+            'Gorilla': { emoji: '🦍', id: 'gorilla', sound: () => {
+                if (!audioInitialized) return;
+                animalSoundSynth.oscillator.type = 'sawtooth';
+                animalSoundSynth.triggerAttackRelease("G2", "8n", Tone.now());
+            }},
+            'Giraffe': { emoji: '🦒', id: 'giraffe', sound: () => {
+                if (!audioInitialized) return;
+                animalSoundSynth.oscillator.type = 'sine';
+                animalSoundSynth.triggerAttackRelease("C3", "4n", Tone.now());
+            }}, 
+            'Beaver': { emoji: '🦫', id: 'beaver', sound: () => {
+                if (!audioInitialized) return;
+                animalSoundSynth.oscillator.type = 'square';
+                animalSoundSynth.triggerAttackRelease("G4", "32n", Tone.now());
+                animalSoundSynth.triggerAttackRelease("G4", "32n", Tone.now() + 0.05);
+            }}
         };
 
         let currentPetName = null;
@@ -319,7 +341,7 @@
         
         // --- Audio ---
         let audioInitialized = false;
-        let eatSynth, drinkSynth, kickSynth, goalSynth, missSynth;
+        let eatSynth, drinkSynth, kickSynth, goalSynth, missSynth, animalSoundSynth;
 
         function initializeAudio() {
             if (audioInitialized) return;
@@ -349,6 +371,12 @@
                 missSynth = new Tone.NoiseSynth({
                     noise: { type: 'pink' },
                     envelope: { attack: 0.01, decay: 0.3, sustain: 0 }
+                }).toDestination();
+                
+                // Synth for animal sounds
+                animalSoundSynth = new Tone.Synth({
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.02, decay: 0.1, sustain: 0.2, release: 0.2 }
                 }).toDestination();
                 
                 audioInitialized = true;
@@ -691,9 +719,16 @@
         }
         
         function getEventPos(e) {
-            if (e.touches) {
+            // FIX: This now correctly handles touchstart, touchend, and mouse events
+            // For 'touchend' event
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+            }
+            // For 'touchstart' or 'touchmove' event
+            if (e.touches && e.touches.length > 0) {
                 return { x: e.touches[0].clientX, y: e.touches[0].clientY };
             }
+            // Fallback for mouse events (clientX/Y are fine)
             return { x: e.clientX, y: e.clientY };
         }
 
@@ -706,8 +741,11 @@
                 button.className = "action-button w-full bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-6 px-4 rounded-xl shadow text-lg";
                 button.innerHTML = `${petOptions[petName].emoji} <br> ${petName}`;
                 // Add audio starter to button
-                button.onclick = () => {
-                    startAudioContext();
+                button.onclick = async () => {
+                    await startAudioContext(); // Ensure context is started and synths are ready
+                    if (petOptions[petName].sound) {
+                        petOptions[petName].sound(); // Now synths exist
+                    }
                     selectPet(petName);
                 };
                 petSelectionButtons.appendChild(button);
@@ -752,8 +790,11 @@
                 );
                 
                 if (petNameFromNfc) {
-                    startAudioContext(); // Start audio on NFC load
-                    selectPet(petNameFromNfc);
+                    // Make sure audio is ready before selecting pet
+                    (async () => {
+                        await startAudioContext(); // Start audio on NFC load
+                        selectPet(petNameFromNfc);
+                    })();
                 } else {
                     showHomeScreen();
                 }
