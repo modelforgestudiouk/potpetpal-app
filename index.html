@@ -6,16 +6,24 @@
     <title>PotPetPal</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Tone.js for audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <style>
         /* Use a playful, rounded font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@700;800&display=swap');
+        html, body {
+            height: 100%; /* Ensure full height */
+        }
         body {
             font-family: 'Nunito', 'Inter', sans-serif;
             /* New Theme: Black */
             background-color: #111827; /* bg-gray-900 */
             /* Stop touch actions like "pull to refresh" */
             touch-action: manipulation;
-            overflow: hidden;
+            /* FIX: Allow scrolling if content overflows (like keyboard) */
+            overflow-y: auto;
+            /* FIX: Use dynamic viewport height for mobile */
+            min-height: 100dvh;
         }
         
         /* Custom styles for the progress bars */
@@ -100,9 +108,14 @@
             height: 100px;
             border-top: 2px dashed #4b5563; /* gray-600 */
         }
+        
+        /* FIX: Ensure modal is on top */
+        #game-over-modal {
+            z-index: 50;
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex items-center justify-center p-4">
 
     <!-- Main App Container -->
     <div class="bg-gray-800 w-full max-w-sm p-6 rounded-3xl shadow-2xl border border-gray-700">
@@ -226,7 +239,8 @@
             <div id="game-message" class="text-center text-orange-400 font-bold h-6 mt-4"></div>
 
             <!-- Game Over Modal -->
-            <div id="game-over-modal" class="hidden absolute inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center p-4">
+            <!-- FIX: Added z-50 to ensure it's on top of other game elements -->
+            <div id="game-over-modal" class="hidden absolute inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center p-4 z-50">
                 <div class="bg-gray-800 p-8 rounded-2xl shadow-lg text-center">
                     <h2 class="text-3xl font-bold text-white mb-4">Game Over!</h2>
                     <p id="final-score-message" class="text-xl text-gray-300 mb-6">You scored 0 out of 3!</p>
@@ -302,6 +316,60 @@
         let flickStartPos = null;
         let flickStartTime = null;
         let ballKicked = false;
+        
+        // --- Audio ---
+        let audioInitialized = false;
+        let eatSynth, drinkSynth, kickSynth, goalSynth, missSynth;
+
+        function initializeAudio() {
+            if (audioInitialized) return;
+            try {
+                // Define synths
+                eatSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0 }
+                }).toDestination();
+                
+                drinkSynth = new Tone.Synth({
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 }
+                }).toDestination();
+                
+                kickSynth = new Tone.MembraneSynth({
+                    pitchDecay: 0.01,
+                    octaves: 2,
+                    envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
+                }).toDestination();
+
+                goalSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.01, decay: 0.5, sustain: 0.1 }
+                }).toDestination();
+                
+                missSynth = new Tone.NoiseSynth({
+                    noise: { type: 'pink' },
+                    envelope: { attack: 0.01, decay: 0.3, sustain: 0 }
+                }).toDestination();
+                
+                audioInitialized = true;
+                console.log("Audio Initialized");
+            } catch (e) {
+                console.error("Audio failed to initialize:", e);
+            }
+        }
+        
+        // Call Tone.start() on first user interaction
+        async function startAudioContext() {
+            if (audioInitialized) return; // Already started
+            await Tone.start();
+            console.log("Audio context started!");
+            initializeAudio(); // Now create the synths
+        }
+        
+        // Attach to the whole document for simplicity
+        document.body.addEventListener('mousedown', startAudioContext, { once: true });
+        document.body.addEventListener('touchstart', startAudioContext, { once: true });
+
 
         // --- Core Functions ---
 
@@ -353,13 +421,16 @@
                 return;
             }
             
-            // Update pet name
-            if (petStats.customName) {
-                petNameTitle.textContent = petStats.customName;
-                petNameInput.value = petStats.customName;
-            } else {
-                petNameTitle.textContent = `My ${currentPetName}`;
-                petNameInput.value = `My ${currentPetName}`;
+            // --- Name Update Logic ---
+            // FIX: Check if input is hidden. If not, user is editing.
+            if (petNameInput.classList.contains('hidden')) {
+                if (petStats.customName) {
+                    petNameTitle.textContent = petStats.customName;
+                    petNameInput.value = petStats.customName;
+                } else {
+                    petNameTitle.textContent = `My ${currentPetName}`;
+                    petNameInput.value = `My ${currentPetName}`;
+                }
             }
             
             // Update pet image
@@ -394,6 +465,7 @@
         function feedPet() {
             if (petStats.food >= 100) return;
             petStats.food = Math.min(100, petStats.food + 20);
+            if (audioInitialized) eatSynth.triggerAttackRelease("0.1");
             showMessage("Yum, thanks!");
             petStats.lastVisitTimestamp = Date.now();
             saveStats();
@@ -403,6 +475,11 @@
         function giveWater() {
             if (petStats.water >= 100) return;
             petStats.water = Math.min(100, petStats.water + 20);
+            // Play a "glug" sound
+            if (audioInitialized) {
+                drinkSynth.triggerAttackRelease("G2", "8n", Tone.now());
+                drinkSynth.triggerAttackRelease("E2", "8n", Tone.now() + 0.1);
+            }
             showMessage("Glug glug glug!");
             petStats.lastVisitTimestamp = Date.now();
             saveStats();
@@ -422,6 +499,11 @@
         // --- Pet Rename Logic ---
         function toggleNameEdit(isEditing) {
             if (isEditing) {
+                // FIX: Pause game loop while editing
+                if (gameLoopInterval) {
+                    clearInterval(gameLoopInterval);
+                    gameLoopInterval = null;
+                }
                 petNameTitle.classList.add('hidden');
                 editNameButton.classList.add('hidden');
                 petNameInput.classList.remove('hidden');
@@ -441,6 +523,11 @@
                 saveStats();
             }
             toggleNameEdit(false);
+            
+            // FIX: Restart game loop after saving
+            if (!gameLoopInterval) {
+                gameLoopInterval = setInterval(gameLoop, 5000);
+            }
         }
 
         // --- Screen Navigation ---
@@ -548,6 +635,7 @@
             if (deltaY > 0 || deltaTime < 50) return; // Must be upward flick and fast enough
 
             ballKicked = true;
+            if (audioInitialized) kickSynth.triggerAttackRelease("G2", "32n");
             shotsLeft--;
             gameMessage.textContent = "";
             updateGameUI();
@@ -562,11 +650,8 @@
             goalkeeper.style.transform = `translateX(${keeperDive}px)`;
             
             // --- 2. Ball Physics ---
-            // Simple mapping of flick to goal position
             let targetX = velocityX * 100; // How far left/right
             let targetY = -250 - (velocityY * 50); // How far up
-            
-            // Clamp ball to stay somewhat in bounds
             targetX = Math.max(-150, Math.min(150, targetX));
             
             ball.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.8)`;
@@ -576,22 +661,20 @@
             setTimeout(() => {
                 const goalRect = goal.getBoundingClientRect();
                 const keeperRect = goalkeeper.getBoundingClientRect();
-                
-                // Estimate where ball ended up
                 const ballFinalX = ball.getBoundingClientRect().x + targetX;
                 
-                // Did it hit the keeper?
                 if (ballFinalX > keeperRect.left && ballFinalX < keeperRect.right) {
                     gameMessage.textContent = "SAVED!";
+                    if (audioInitialized) missSynth.triggerAttackRelease("0.3");
                 } 
-                // Did it go in the goal?
                 else if (ballFinalX > goalRect.left && ballFinalX < goalRect.right) {
                     gameMessage.textContent = "GOAL!";
                     score++;
+                    if (audioInitialized) goalSynth.triggerAttackRelease("0.5");
                 } 
-                // Missed
                 else {
                     gameMessage.textContent = "MISS!";
+                    if (audioInitialized) missSynth.triggerAttackRelease("0.3");
                 }
                 
                 updateGameUI();
@@ -622,7 +705,11 @@
                 const button = document.createElement('button');
                 button.className = "action-button w-full bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-6 px-4 rounded-xl shadow text-lg";
                 button.innerHTML = `${petOptions[petName].emoji} <br> ${petName}`;
-                button.onclick = () => selectPet(petName);
+                // Add audio starter to button
+                button.onclick = () => {
+                    startAudioContext();
+                    selectPet(petName);
+                };
                 petSelectionButtons.appendChild(button);
             }
             
@@ -644,7 +731,7 @@
             modalBackToPetButton.addEventListener('click', () => showPetScreen(score)); // Back with score
             playAgainButton.addEventListener('click', resetGame);
             
-            // Flick listeners
+            // Flick listeners (native events for better performance)
             ball.addEventListener('mousedown', handleFlickStart, false);
             document.addEventListener('mouseup', handleFlickEnd, false);
             ball.addEventListener('touchstart', handleFlickStart, { passive: false });
@@ -665,6 +752,7 @@
                 );
                 
                 if (petNameFromNfc) {
+                    startAudioContext(); // Start audio on NFC load
                     selectPet(petNameFromNfc);
                 } else {
                     showHomeScreen();
