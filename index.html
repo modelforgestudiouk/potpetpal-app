@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>PotPetPal</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,24 +11,26 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@700;800&display=swap');
         body {
             font-family: 'Nunito', 'Inter', sans-serif;
-            /* Add a subtle gradient background */
-            background: linear-gradient(to bottom right, #f0f9ff, #e0f2fe);
+            /* New Theme: Black */
+            background-color: #111827; /* bg-gray-900 */
+            /* Stop touch actions like "pull to refresh" */
+            touch-action: manipulation;
+            overflow: hidden;
         }
         
         /* Custom styles for the progress bars */
         .progress-bar {
-            background-color: #e5e7eb; /* gray-200 */
+            background-color: #374151; /* gray-700 */
             border-radius: 9999px;
             overflow: hidden;
             height: 2rem; /* h-8 */
-            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
         }
         
         .progress-bar-inner {
             height: 100%;
             border-radius: 9999px;
             transition: width 0.3s ease-out;
-            /* Add a nice sheen/gradient to the bars */
             background: linear-gradient(to right, var(--bar-color-from), var(--bar-color-to));
         }
 
@@ -46,52 +48,88 @@
             font-size: 10rem; /* Make emoji large */
             line-height: 1;
             padding: 1rem;
+            user-select: none;
         }
 
         /* Button styles with a "press" effect */
         .action-button {
             transition: transform 0.1s ease, box-shadow 0.1s ease;
+            user-select: none;
         }
         .action-button:active {
             transform: translateY(2px);
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Game Styles */
+        #game-area {
+            background-color: #059669; /* bg-green-600 */
+            background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 3rem 3rem;
+            border: 4px solid white;
+            border-radius: 0.5rem;
+            height: 320px; /* Fixed height for the pitch */
+            user-select: none;
+            overflow: hidden;
+        }
+        #goal {
+            width: 60%;
+            height: 100px;
+            border: 4px solid white;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            z-index: 10;
+        }
+        #goalkeeper {
+            font-size: 3rem;
+            z-index: 20;
+            transition: transform 0.3s ease-out;
+        }
+        #ball {
+            font-size: 2.5rem; /* 40px */
+            cursor: pointer;
+            z-index: 30;
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+            user-select: none;
+        }
+        #ball.kicked {
+            transform-origin: center;
+        }
+        #flick-area {
+            height: 100px;
+            border-top: 2px dashed #4b5563; /* gray-600 */
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
     <!-- Main App Container -->
-    <div class="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl border border-gray-100">
+    <div class="bg-gray-800 w-full max-w-sm p-6 rounded-3xl shadow-2xl border border-gray-700">
 
         <!-- Logo -->
         <div class="flex justify-center mb-4">
-            <!--
-                This is the logo you uploaded. 
-                It will now work because it's in the same folder.
-            -->
             <img src="IMG_2199.JPG" alt="PotPetPal Logo" class="w-3/4" 
                  onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block'">
-            <!-- Fallback text if the image fails to load -->
-            <h1 id="logo-fallback" class="text-3xl font-extrabold text-center text-gray-800" style="display: none;">
+            <h1 id="logo-fallback" class="text-3xl font-extrabold text-center text-orange-500" style="display: none;">
                 PotPetPal
             </h1>
         </div>
 
         <!-- 
           APP SCREENS
-          We will show/hide these divs using JavaScript 
         -->
 
         <!-- Home Screen -->
         <div id="home-screen">
-            <h1 class="text-2xl font-extrabold text-center text-gray-800 mb-6">Welcome!</h1>
-            <p class="text-center text-gray-600 mb-6">Select a demo pet to care for.</p>
+            <h1 class="text-2xl font-extrabold text-center text-gray-100 mb-6">Welcome!</h1>
+            <p class="text-center text-gray-400 mb-6">Select a demo pet to care for.</p>
             
             <div id="pet-selection-buttons" class="grid grid-cols-2 gap-4">
                 <!-- Pet buttons will be inserted here by JavaScript -->
             </div>
             
-            <p class="text-center text-xs text-gray-400 mt-6">
+            <p class="text-center text-xs text-gray-500 mt-6">
                 Or tap your PotPetPal NFC tag to load your pet.
             </p>
         </div>
@@ -99,10 +137,15 @@
         <!-- Pet Screen (Initially Hidden) -->
         <div id="pet-screen" class="hidden">
             
-            <!-- Back Button -->
-            <button id="back-btn" class="text-sm text-blue-600 hover:underline mb-4">&larr; Back to Home</button>
+            <button id="back-btn" class="text-sm text-orange-500 hover:underline mb-4">&larr; Back to Home</button>
             
-            <h1 id="pet-name-title" class="text-3xl font-extrabold text-center text-gray-800 mb-6"></h1>
+            <!-- Pet Name / Rename Input -->
+            <div class="flex items-center justify-center mb-6 gap-2">
+                <h1 id="pet-name-title" class="text-3xl font-extrabold text-center text-gray-100"></h1>
+                <input id="pet-name-input" type="text" class="hidden text-3xl font-extrabold text-center text-gray-900 bg-gray-200 rounded-lg w-full" maxlength="15">
+                <button id="edit-name-btn" class="text-2xl p-1 text-gray-400 hover:text-orange-500">✏️</button>
+            </div>
+
 
             <!-- Pet Image Container -->
             <div class="flex justify-center mb-8">
@@ -115,7 +158,7 @@
             <div class="space-y-5">
                 <!-- Food Bar -->
                 <div>
-                    <label class="text-lg font-bold text-green-700 mb-2 block">Food</label>
+                    <label class="text-lg font-bold text-green-500 mb-2 block">Food</label>
                     <div class="progress-bar">
                         <div id="food-bar-inner" class="progress-bar-inner" style="width: 50%; --bar-color-from: #4d7c0f; --bar-color-to: #a3e635;"></div>
                     </div>
@@ -123,9 +166,17 @@
 
                 <!-- Water Bar -->
                 <div>
-                    <label class="text-lg font-bold text-blue-700 mb-2 block">Water</label>
+                    <label class="text-lg font-bold text-blue-500 mb-2 block">Water</label>
                     <div class="progress-bar">
                         <div id="water-bar-inner" class="progress-bar-inner" style="width: 50%; --bar-color-from: #1d4ed8; --bar-color-to: #60a5fa;"></div>
+                    </div>
+                </div>
+                
+                <!-- Happiness Bar -->
+                <div>
+                    <label class="text-lg font-bold text-orange-500 mb-2 block">Happiness</label>
+                    <div class="progress-bar">
+                        <div id="happiness-bar-inner" class="progress-bar-inner" style="width: 50%; --bar-color-from: #f97316; --bar-color-to: #fbbf24;"></div>
                     </div>
                 </div>
             </div>
@@ -139,9 +190,52 @@
                     Water 💧
                 </button>
             </div>
+            <button id="play-btn" class="action-button w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg mt-4">
+                Play ⚽
+            </button>
             
             <!-- Status Message -->
-            <div id="message-box" class="text-center text-gray-600 font-semibold mt-6 h-6"></div>
+            <div id="message-box" class="text-center text-gray-400 font-semibold mt-6 h-6"></div>
+        </div>
+        
+        <!-- Game Screen (Initially Hidden) -->
+        <div id="game-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <button id="back-to-pet-btn" class="text-sm text-orange-500 hover:underline">&larr; Back to Pet</button>
+                <div class="text-right text-white">
+                    <div id="score-display" class="text-lg font-bold">Score: 0</div>
+                    <div id="shots-display" class="text-sm text-gray-400">Shots: 3</div>
+                </div>
+            </div>
+            
+            <!-- Game Area -->
+            <div id="game-area" class="relative flex flex-col justify-between items-center">
+                <!-- Goal -->
+                <div id="goal" class="relative top-0 flex justify-center items-end">
+                    <!-- Goalkeeper -->
+                    <div id="goalkeeper" class="absolute bottom-0">🐱</div>
+                </div>
+                
+                <!-- Flick Area -->
+                <div id="flick-area" class="w-full flex justify-center items-center">
+                    <!-- Ball -->
+                    <div id="ball">⚽</div>
+                </div>
+            </div>
+            
+            <div id="game-message" class="text-center text-orange-400 font-bold h-6 mt-4"></div>
+
+            <!-- Game Over Modal -->
+            <div id="game-over-modal" class="hidden absolute inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center p-4">
+                <div class="bg-gray-800 p-8 rounded-2xl shadow-lg text-center">
+                    <h2 class="text-3xl font-bold text-white mb-4">Game Over!</h2>
+                    <p id="final-score-message" class="text-xl text-gray-300 mb-6">You scored 0 out of 3!</p>
+                    <div class="flex gap-4">
+                        <button id="play-again-btn" class="action-button bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full">Play Again</button>
+                        <button id="modal-back-to-pet-btn" class="action-button bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full">Back to Pet</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -159,7 +253,13 @@
 
         let currentPetName = null;
         let petStats = {};
-        const defaultStats = { food: 60, water: 60, lastVisitTimestamp: Date.now() };
+        const defaultStats = { 
+            food: 60, 
+            water: 60, 
+            happiness: 60, 
+            lastVisitTimestamp: Date.now(),
+            customName: null
+        };
         let gameLoopInterval = null;
 
         // --- DOM Elements ---
@@ -169,95 +269,121 @@
         const backButton = document.getElementById('back-btn');
         
         const petNameTitle = document.getElementById('pet-name-title');
+        const petNameInput = document.getElementById('pet-name-input');
+        const editNameButton = document.getElementById('edit-name-btn');
+        
         const petImageContainer = document.getElementById('pet-image-container');
         const foodBar = document.getElementById('food-bar-inner');
         const waterBar = document.getElementById('water-bar-inner');
+        const happinessBar = document.getElementById('happiness-bar-inner');
+        
         const feedButton = document.getElementById('feed-btn');
         const waterButton = document.getElementById('water-btn');
+        const playButton = document.getElementById('play-btn');
         const messageBox = document.getElementById('message-box');
+        
+        // Game DOM Elements
+        const gameScreen = document.getElementById('game-screen');
+        const backToPetButton = document.getElementById('back-to-pet-btn');
+        const scoreDisplay = document.getElementById('score-display');
+        const shotsDisplay = document.getElementById('shots-display');
+        const gameMessage = document.getElementById('game-message');
+        const goal = document.getElementById('goal');
+        const goalkeeper = document.getElementById('goalkeeper');
+        const ball = document.getElementById('ball');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreMessage = document.getElementById('final-score-message');
+        const playAgainButton = document.getElementById('play-again-btn');
+        const modalBackToPetButton = document.getElementById('modal-back-to-pet-btn');
 
+        // --- Game State ---
+        let score = 0;
+        let shotsLeft = 3;
+        let flickStartPos = null;
+        let flickStartTime = null;
+        let ballKicked = false;
 
         // --- Core Functions ---
 
         function saveStats() {
             if (!currentPetName) return;
-            // Save stats based on the current pet's name
             localStorage.setItem('potPetPalStats_' + currentPetName, JSON.stringify(petStats));
         }
 
         function loadStats(petName) {
-            // Load stats for the current pet, or use defaults
-            
-            // **** THIS IS THE BUG FIX ****
-            // The line below had a syntax error: 'as petName' is invalid.
-            // It has been corrected to use '+' for string concatenation.
             const loadedStats = JSON.parse(localStorage.getItem('potPetPalStats_' + petName));
             
             if (loadedStats) {
                 petStats = loadedStats;
+                // Ensure new stats from updates are added
+                if (petStats.happiness === undefined) petStats.happiness = 60;
+                if (petStats.customName === undefined) petStats.customName = null;
             } else {
-                // First time loading this pet, set a fresh timestamp
                 petStats = { ...defaultStats, lastVisitTimestamp: Date.now() };
             }
 
-            // --- THIS IS THE OFFLINE LOGIC ---
+            // --- OFFLINE LOGIC ---
             const now = Date.now();
-            const lastVisit = petStats.lastVisitTimestamp || now; // Use now as fallback
+            const lastVisit = petStats.lastVisitTimestamp || now;
             const secondsOffline = (now - lastVisit) / 1000;
 
-            // Only apply decay if they've been offline for more than our game loop interval
             if (secondsOffline > 5) { 
-                // Decay rates from gameLoop (1 per 5s for food, 1.5 per 5s for water)
-                const foodDecayPerSecond = 1 / 5;
-                const waterDecayPerSecond = 1.5 / 5;
-
-                const foodDecay = secondsOffline * foodDecayPerSecond;
-                const waterDecay = secondsOffline * waterDecayPerSecond;
+                const foodDecay = (secondsOffline / 5) * 1;
+                const waterDecay = (secondsOffline / 5) * 1.5;
+                const happinessDecay = (secondsOffline / 5) * 2; // Happiness decays fastest
 
                 petStats.food = Math.max(0, Math.round(petStats.food - foodDecay));
                 petStats.water = Math.max(0, Math.round(petStats.water - waterDecay));
+                petStats.happiness = Math.max(0, Math.round(petStats.happiness - happinessDecay));
                 
-                // Show a message if stats changed a lot
-                if (foodDecay > 10 || waterDecay > 10) {
-                    // Use a timeout to show this *after* the pet screen is visible
+                if (foodDecay > 10 || waterDecay > 10 || happinessDecay > 10) {
                     setTimeout(() => showMessage("I missed you!"), 100);
                 }
             }
 
-            // 3. Update timestamp to *now* and save
             petStats.lastVisitTimestamp = now;
-            saveStats(); // Save the new (decayed) stats
+            saveStats();
         }
 
         function updateUI() {
             if (!currentPetName) return;
-            
-            // Check if petOptions has the current pet
             if (!petOptions[currentPetName]) {
                 console.error("Selected pet name not in petOptions:", currentPetName);
-                showHomeScreen(); // Go back home if pet is invalid
+                showHomeScreen();
                 return;
             }
-
-            // Update pet screen details
-            petNameTitle.textContent = `My ${currentPetName}`;
+            
+            // Update pet name
+            if (petStats.customName) {
+                petNameTitle.textContent = petStats.customName;
+                petNameInput.value = petStats.customName;
+            } else {
+                petNameTitle.textContent = `My ${currentPetName}`;
+                petNameInput.value = `My ${currentPetName}`;
+            }
+            
+            // Update pet image
             petImageContainer.textContent = petOptions[currentPetName].emoji;
+            goalkeeper.textContent = petOptions[currentPetName].emoji;
 
-            // Update the visual width of the bars
+            // Update bars
             foodBar.style.width = petStats.food + '%';
             waterBar.style.width = petStats.water + '%';
+            happinessBar.style.width = petStats.happiness + '%';
             
-            // Disable buttons if pet is full
+            // Disable buttons if full
             feedButton.disabled = petStats.food >= 100;
             waterButton.disabled = petStats.water >= 100;
+            playButton.disabled = petStats.happiness >= 100;
             
-            // Style disabled buttons
             feedButton.style.opacity = feedButton.disabled ? 0.5 : 1;
             waterButton.style.opacity = waterButton.disabled ? 0.5 : 1;
+            playButton.style.opacity = playButton.disabled ? 0.5 : 1;
         }
 
-        function showMessage(text) {
+        function showMessage(text, isGood = true) {
             messageBox.textContent = text;
+            messageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-6 h-6' : 'text-center text-red-400 font-semibold mt-6 h-6';
             setTimeout(() => {
                 if (messageBox.textContent === text) {
                     messageBox.textContent = '';
@@ -266,63 +392,226 @@
         }
 
         function feedPet() {
-            if (petStats.food >= 100) return; // Don't feed if full
-            petStats.food = Math.min(100, petStats.food + 20); // Add 20, max 100
+            if (petStats.food >= 100) return;
+            petStats.food = Math.min(100, petStats.food + 20);
             showMessage("Yum, thanks!");
-            
-            // Update timestamp on interaction
             petStats.lastVisitTimestamp = Date.now();
             saveStats();
             updateUI();
         }
 
         function giveWater() {
-            if (petStats.water >= 100) return; // Don't water if full
-            petStats.water = Math.min(100, petStats.water + 20); // Add 20, max 100
+            if (petStats.water >= 100) return;
+            petStats.water = Math.min(100, petStats.water + 20);
             showMessage("Glug glug glug!");
-
-            // Update timestamp on interaction
             petStats.lastVisitTimestamp = Date.now();
             saveStats();
             updateUI();
         }
 
         function gameLoop() {
-            // This function runs every few seconds to make the pet "live"
             petStats.food = Math.max(0, petStats.food - 1);
-            petStats.water = Math.max(0, petStats.water - 1.5); // Pets get thirsty faster!
+            petStats.water = Math.max(0, petStats.water - 1.5);
+            petStats.happiness = Math.max(0, petStats.happiness - 2); // Happiness decays
             
-            // Update timestamp every loop
             petStats.lastVisitTimestamp = Date.now();
-            
             saveStats();
             updateUI();
         }
 
-// --- Screen Navigation ---
+        // --- Pet Rename Logic ---
+        function toggleNameEdit(isEditing) {
+            if (isEditing) {
+                petNameTitle.classList.add('hidden');
+                editNameButton.classList.add('hidden');
+                petNameInput.classList.remove('hidden');
+                petNameInput.focus();
+            } else {
+                petNameTitle.classList.remove('hidden');
+                editNameButton.classList.remove('hidden');
+                petNameInput.classList.add('hidden');
+            }
+        }
+
+        function savePetName() {
+            const newName = petNameInput.value.trim();
+            if (newName && newName.length > 0) {
+                petStats.customName = newName;
+                petNameTitle.textContent = newName;
+                saveStats();
+            }
+            toggleNameEdit(false);
+        }
+
+        // --- Screen Navigation ---
 
         function showHomeScreen() {
             homeScreen.classList.remove('hidden');
             petScreen.classList.add('hidden');
+            gameScreen.classList.add('hidden');
             currentPetName = null;
-            // Stop the game loop when on the home screen
             if (gameLoopInterval) {
                 clearInterval(gameLoopInterval);
                 gameLoopInterval = null;
             }
         }
 
-        function selectPet(petName) {
-            currentPetName = petName;
-            loadStats(petName); // Load and calculate offline decay
-            updateUI();
-            
+        function showPetScreen(reward = 0) {
             homeScreen.classList.add('hidden');
             petScreen.classList.remove('hidden');
+            gameScreen.classList.add('hidden');
+            gameOverModal.classList.add('hidden');
 
-            // Start the game loop for this pet
-            if (gameLoopInterval) clearInterval(gameLoopInterval);
-            gameLoopInterval = setInterval(gameLoop, 5000);
+            if (reward > 0) {
+                petStats.happiness = Math.min(100, petStats.happiness + reward * 10);
+                showMessage(`So fun! +${reward * 10} Happiness!`);
+            } else if (reward < 0) {
+                 showMessage("Aww, maybe next time!", false);
+            }
+            
+            petStats.lastVisitTimestamp = Date.now();
+            saveStats();
+            updateUI();
+            
+            if (!gameLoopInterval) {
+                gameLoopInterval = setInterval(gameLoop, 5000);
+            }
+        }
+        
+        function showGameScreen() {
+            homeScreen.classList.add('hidden');
+            petScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            gameOverModal.classList.add('hidden');
+            
+            if (gameLoopInterval) {
+                clearInterval(gameLoopInterval);
+                gameLoopInterval = null;
+            }
+            resetGame();
+        }
+        
+        function selectPet(petName) {
+            currentPetName = petName;
+            loadStats(petName);
+            showPetScreen();
+        }
+
+        // --- Game Logic ---
+        function resetGame() {
+            score = 0;
+            shotsLeft = 3;
+            updateGameUI();
+            resetBall();
+            gameOverModal.classList.add('hidden');
+            gameMessage.textContent = "Flick the ball to shoot!";
+        }
+        
+        function resetBall() {
+            ballKicked = false;
+            ball.style.transform = "translate(0, 0)";
+            ball.style.opacity = 1;
+            goalkeeper.style.transform = "translateX(0)";
+            gameMessage.textContent = shotsLeft > 0 ? "Flick the ball to shoot!" : "";
+        }
+        
+        function updateGameUI() {
+            scoreDisplay.textContent = `Score: ${score}`;
+            shotsDisplay.textContent = `Shots: ${shotsLeft}`;
+        }
+        
+        function showGameOver() {
+            finalScoreMessage.textContent = `You scored ${score} out of 3!`;
+            gameOverModal.classList.remove('hidden');
+        }
+        
+        function handleFlickStart(e) {
+            if (ballKicked) return;
+            e.preventDefault();
+            flickStartPos = getEventPos(e);
+            flickStartTime = Date.now();
+        }
+
+        function handleFlickEnd(e) {
+            if (ballKicked || !flickStartPos) return;
+            e.preventDefault();
+            
+            const flickEndPos = getEventPos(e);
+            const flickEndTime = Date.now();
+            
+            const deltaX = flickEndPos.x - flickStartPos.x;
+            const deltaY = flickEndPos.y - flickStartPos.y;
+            const deltaTime = flickEndTime - flickStartTime;
+            
+            flickStartPos = null; // Reset for next flick
+
+            if (deltaY > 0 || deltaTime < 50) return; // Must be upward flick and fast enough
+
+            ballKicked = true;
+            shotsLeft--;
+            gameMessage.textContent = "";
+            updateGameUI();
+            
+            // Calculate flick "power"
+            const velocityY = Math.abs(deltaY / deltaTime); // Speed of flick
+            const velocityX = deltaX / deltaTime;
+            
+            // --- 1. Goalkeeper AI ---
+            const goalWidth = goal.clientWidth;
+            const keeperDive = (Math.random() - 0.5) * goalWidth * 0.8; // Dive left or right
+            goalkeeper.style.transform = `translateX(${keeperDive}px)`;
+            
+            // --- 2. Ball Physics ---
+            // Simple mapping of flick to goal position
+            let targetX = velocityX * 100; // How far left/right
+            let targetY = -250 - (velocityY * 50); // How far up
+            
+            // Clamp ball to stay somewhat in bounds
+            targetX = Math.max(-150, Math.min(150, targetX));
+            
+            ball.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.8)`;
+            ball.style.opacity = 0; // Fade out as it flies
+
+            // --- 3. Check Result ---
+            setTimeout(() => {
+                const goalRect = goal.getBoundingClientRect();
+                const keeperRect = goalkeeper.getBoundingClientRect();
+                
+                // Estimate where ball ended up
+                const ballFinalX = ball.getBoundingClientRect().x + targetX;
+                
+                // Did it hit the keeper?
+                if (ballFinalX > keeperRect.left && ballFinalX < keeperRect.right) {
+                    gameMessage.textContent = "SAVED!";
+                } 
+                // Did it go in the goal?
+                else if (ballFinalX > goalRect.left && ballFinalX < goalRect.right) {
+                    gameMessage.textContent = "GOAL!";
+                    score++;
+                } 
+                // Missed
+                else {
+                    gameMessage.textContent = "MISS!";
+                }
+                
+                updateGameUI();
+                
+                // --- 4. Next Step ---
+                setTimeout(() => {
+                    if (shotsLeft > 0) {
+                        resetBall();
+                    } else {
+                        showGameOver();
+                    }
+                }, 1500); // Wait 1.5s to show message
+            }, 500); // 0.5s ball flight time
+        }
+        
+        function getEventPos(e) {
+            if (e.touches) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
         }
 
         // --- Initialization ---
@@ -331,16 +620,35 @@
             // Create pet selection buttons
             for (const petName in petOptions) {
                 const button = document.createElement('button');
-                button.className = "action-button w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-6 px-4 rounded-xl shadow text-lg";
+                button.className = "action-button w-full bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-6 px-4 rounded-xl shadow text-lg";
                 button.innerHTML = `${petOptions[petName].emoji} <br> ${petName}`;
                 button.onclick = () => selectPet(petName);
                 petSelectionButtons.appendChild(button);
             }
             
-            // Add event listeners for navigation
+            // Add event listeners
             backButton.addEventListener('click', showHomeScreen);
             feedButton.addEventListener('click', feedPet);
             waterButton.addEventListener('click', giveWater);
+            playButton.addEventListener('click', showGameScreen);
+            
+            // Rename listeners
+            editNameButton.addEventListener('click', () => toggleNameEdit(true));
+            petNameInput.addEventListener('blur', savePetName);
+            petNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') savePetName();
+            });
+            
+            // Game listeners
+            backToPetButton.addEventListener('click', () => showPetScreen(0)); // Back with no reward
+            modalBackToPetButton.addEventListener('click', () => showPetScreen(score)); // Back with score
+            playAgainButton.addEventListener('click', resetGame);
+            
+            // Flick listeners
+            ball.addEventListener('mousedown', handleFlickStart, false);
+            document.addEventListener('mouseup', handleFlickEnd, false);
+            ball.addEventListener('touchstart', handleFlickStart, { passive: false });
+            document.addEventListener('touchend', handleFlickEnd, { passive: false });
         }
 
         // --- App Start ---
@@ -348,25 +656,20 @@
         window.onload = () => {
             initializeHome();
 
-            // Check for NFC tap (via URL parameter)
             const urlParams = new URLSearchParams(window.location.search);
             const nfcPetId = urlParams.get('pet');
 
             if (nfcPetId) {
-                // Find pet name that matches the ID from the URL
                 const petNameFromNfc = Object.keys(petOptions).find(
                     name => petOptions[name].id === nfcPetId
                 );
                 
                 if (petNameFromNfc) {
-                    // NFC tap detected! Load this pet directly.
                     selectPet(petNameFromNfc);
                 } else {
-                    // Invalid pet ID in URL, show home screen
                     showHomeScreen();
                 }
             } else {
-                // No NFP tap, show home screen
                 showHomeScreen();
             }
         };
