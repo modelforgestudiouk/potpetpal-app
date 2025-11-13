@@ -146,7 +146,7 @@
             font-size: 1rem; /* text-base */
         }
 
-        /* Food/Drink/Accessory Selection Screen */
+        /* Food/Drink/Accessory/Terrain/Furniture Selection Screen */
         .item-item {
             background-color: #374151; /* bg-gray-700 */
             border-radius: 1rem; /* rounded-xl */
@@ -164,7 +164,7 @@
             border-color: #4b5563;
             cursor: not-allowed;
         }
-        /* NEW: Highlight selected accessory */
+        /* NEW: Highlight selected accessory/terrain */
         .item-item.selected {
             border-color: #4ade80; /* green-400 */
             box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
@@ -184,6 +184,22 @@
         .price-pp {
             color: #fcd34d; /* text-amber-300 */
         }
+        .item-name {
+             color: white;
+             font-weight: bold;
+             font-size: 1rem;
+             margin-top: 0.25rem;
+        }
+        /* Special class for owned furniture */
+        .item-item.owned {
+            border-color: #60a5fa; /* blue-400 */
+            opacity: 0.6;
+        }
+        .owned .item-price {
+            color: #60a5fa;
+            font-weight: 800;
+        }
+
 
         /* Generic Modal for all games */
         .game-over-modal {
@@ -234,12 +250,26 @@
             font-size: 2.5rem; /* 40px */
             cursor: pointer;
             z-index: 30;
-            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+            /* REMOVED transition, will be handled by animation */
             user-select: none;
         }
-        #ball.kicked {
-            transform-origin: center;
+        
+        /* NEW: Curveball animation */
+        @keyframes curve-ball {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(var(--curve-x), var(--curve-y)) scale(0.9);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(var(--target-x), var(--target-y)) scale(0.8);
+                opacity: 0;
+            }
         }
+
         #flick-area {
             height: 100px;
             border-top: 2px dashed #4b5563; /* gray-600 */
@@ -255,6 +285,192 @@
             left: 50%;
             transform: translateX(-50%) scale(1);
             transition: all 0.5s ease-in-out;
+        }
+
+        /* NEW: Shell Game Styles */
+        #shell-game-board {
+            height: 300px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            background-color: #064e3b; /* dark green */
+            border-radius: 0.5rem;
+            border: 4px solid #ca8a04; /* gold */
+            overflow: hidden;
+        }
+        .shell-cup {
+            font-size: 6rem; /* 96px */
+            cursor: pointer;
+            position: absolute;
+            bottom: 50px;
+            transition: transform 0.3s ease-in-out;
+            z-index: 10;
+            user-select: none;
+        }
+        .shell-cup.shuffling {
+            transition: transform 0.2s linear;
+        }
+        .shell-cup.up {
+            transform: translateY(-50px);
+        }
+        #shell-cup-1 { left: 15%; }
+        #shell-cup-2 { left: 50%; transform: translateX(-50%); }
+        #shell-cup-3 { right: 15%; }
+        
+        #shell-ball {
+            font-size: 2rem; /* 32px */
+            position: absolute;
+            bottom: 20px;
+            z-index: 5;
+            transition: all 0.3s ease-in-out;
+        }
+        .shell-cup.selected-player::after {
+            content: 'YOU';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            background-color: #2563eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .shell-cup.selected-pet::after {
+            content: 'PET';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            background-color: #f97316;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* NEW: Pet Pod Styles */
+        #pet-pod-container {
+            width: 100%;
+            height: 300px; /* Fixed height */
+            background-color: #374151; /* Fallback */
+            border-radius: 9999px; /* Make it a circle */
+            border: 8px solid #9ca3af; /* gray-400 border */
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+            margin: 1.5rem 0;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Keep furniture inside */
+            transition: background 0.5s ease;
+        }
+        
+        /* NEW: Draggable Furniture Item */
+        .pod-furniture-item {
+            position: absolute;
+            font-size: 3rem; /* 48px */
+            user-select: none;
+            z-index: 15; /* Above background, below pet */
+            cursor: grab;
+        }
+        .pod-furniture-item.dragging {
+            cursor: grabbing;
+            z-index: 16; /* Bring to front while dragging */
+            opacity: 0.8;
+        }
+
+        #pod-pet-emoji {
+            font-size: 5rem; /* 80px */
+            user-select: none;
+            z-index: 20; /* Pet is in front of furniture */
+            position: absolute;
+            bottom: 20px; /* Sit at the "bottom" */
+            pointer-events: none; /* Make sure it doesn't block furniture clicks */
+        }
+        
+        /* NEW: Garden Screen Styles */
+        #garden-container {
+            width: 100%;
+            height: 350px; /* Fixed height */
+            /* Sky, Sun, Grass */
+            background: linear-gradient(to bottom, #87CEEB 0%, #FFFFFF 70%, #22c55e 70%, #16a34a 100%);
+            position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 4px solid #ca8a04; /* gold */
+        }
+        #garden-sun {
+            width: 50px;
+            height: 50px;
+            background-color: #fde047;
+            border-radius: 9999px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            box-shadow: 0 0 20px #fde047;
+        }
+        #garden-plots {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+        }
+        .grow-plot {
+            width: 60px;
+            height: 60px;
+            background-color: #5d4037; /* Soil */
+            border: 4px solid #3e2723; /* Darker soil */
+            border-radius: 0.25rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .grow-plot.dry {
+            background-color: #a1887f; /* Dry soil */
+        }
+        .grow-plot.watered {
+            background-color: #4e342e; /* Wet soil */
+        }
+        .grow-plot.mature:hover {
+            opacity: 0.8;
+        }
+        .grow-plot-button {
+            width: 100%;
+            height: 100%;
+            background: none;
+            border: none;
+            color: white;
+            padding: 0;
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        #watering-animation {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            overflow: hidden;
+        }
+        @keyframes drip {
+            0% { transform: translateY(-20px); opacity: 1; }
+            100% { transform: translateY(350px); opacity: 0; }
+        }
+        .water-drop {
+            position: absolute;
+            font-size: 1.5rem;
+            animation: drip 1s linear infinite;
         }
 
     </style>
@@ -284,6 +500,13 @@
             
             <div id="pet-selection-buttons" class="grid grid-cols-2 gap-4">
                 <!-- Pet buttons will be inserted here by JavaScript -->
+            </div>
+            
+            <!-- NEW: Pagination Controls -->
+            <div id="pagination-controls" class="flex justify-between items-center mt-6">
+                <button id="prev-pet-page" class="action-button bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full">&larr; Prev</button>
+                <span id="pet-page-display" class="text-gray-400 text-sm">Page 1 / 1</span>
+                <button id="next-pet-page" class="action-button bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full">Next &rarr;</button>
             </div>
             
             <p class="text-center text-xs text-gray-500 mt-6">
@@ -355,6 +578,10 @@
                     Style 🧢
                 </button>
             </div>
+            <!-- NEW: Pet Pod Button -->
+            <button id="pod-btn" class="action-button w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg mt-4">
+                Pet Pod 🏡
+            </button>
             <button id="play-btn" class="action-button w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg mt-4">
                 Play ⚽
             </button>
@@ -366,9 +593,33 @@
             <div id="action-emoji"></div>
         </div>
         
+        <!-- NEW: Feed Menu Screen -->
+        <div id="feed-menu-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
+            <h2 class="text-2xl font-bold text-white text-center mb-6">Feed Pet</h2>
+            <div class="space-y-4">
+                <button onclick="showScreen('food-selection-screen')" class="action-button w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
+                    Buy from Food Shop 🏪
+                </button>
+                <button onclick="showScreen('inventory-screen')" class="action-button w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
+                    Use My Inventory 🎒
+                </button>
+            </div>
+        </div>
+
+        <!-- NEW: Inventory Screen -->
+        <div id="inventory-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('feed-menu-screen')">&larr; Back to Feed Menu</button>
+            <h2 class="text-2xl font-bold text-white text-center mb-4">My Inventory</h2>
+            <div id="inventory-item-grid" class="grid grid-cols-2 gap-4">
+                <!-- Inventory items will be inserted here by JavaScript -->
+            </div>
+            <div id="inventory-message-box" class="text-center text-gray-400 font-semibold mt-4 h-6"></div>
+        </div>
+
         <!-- Food Selection Screen -->
         <div id="food-selection-screen" class="app-screen">
-            <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
+            <button class="back-button" onclick="showScreen('feed-menu-screen')">&larr; Back to Feed Menu</button>
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-white">Food Shop</h2>
                 <div id="food-pot-points-display" class="pot-points-display">0 PP</div>
@@ -379,7 +630,7 @@
             <div id="food-message-box" class="text-center text-gray-400 font-semibold mt-4 h-6"></div>
         </div>
 
-        <!-- NEW Drink Selection Screen -->
+        <!-- Drink Selection Screen -->
         <div id="drink-selection-screen" class="app-screen">
             <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
             <div class="flex justify-between items-center mb-4">
@@ -392,7 +643,7 @@
             <div id="drink-message-box" class="text-center text-gray-400 font-semibold mt-4 h-6"></div>
         </div>
 
-        <!-- NEW Accessory Selection Screen -->
+        <!-- Accessory Selection Screen -->
         <div id="accessory-shop-screen" class="app-screen">
             <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
             <div class="flex justify-between items-center mb-4">
@@ -414,20 +665,109 @@
                 <!-- Glasses items will be inserted here by JavaScript -->
             </div>
         </div>
+
+        <!-- Pet Pod Home Screen -->
+        <div id="pet-pod-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
+            <h2 id="pod-owner-name" class="text-2xl font-bold text-white text-center mb-4">'s Pet Pod</h2>
+            
+            <div id="pet-pod-container">
+                <!-- Furniture items and pet emoji will be added here by JS -->
+                <div id="pod-pet-emoji"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mt-6">
+                <button onclick="showScreen('terrain-selection-screen')" class="action-button w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-base">
+                    Terrain 🌳
+                </button>
+                <button onclick="showScreen('furniture-shop-screen')" class="action-button w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-base">
+                    Furniture 🛋️
+                </button>
+                <button onclick="showScreen('garden-screen')" class="action-button w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-base">
+                    Garden 🥕
+                </button>
+            </div>
+        </div>
+
+        <!-- Terrain Selection Screen -->
+        <div id="terrain-selection-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-pod-screen')">&larr; Back to Pod</button>
+            <h2 class="text-2xl font-bold text-white text-center mb-4">Select Terrain</h2>
+            <div id="terrain-item-grid" class="grid grid-cols-2 gap-4">
+                <!-- Terrain items will be inserted here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Furniture Shop Screen -->
+        <div id="furniture-shop-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-pod-screen')">&larr; Back to Pod</button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Furniture Shop</h2>
+                <div id="furniture-pot-points-display" class="pot-points-display">0 PP</div>
+            </div>
+            <div id="furniture-item-grid" class="grid grid-cols-2 gap-4">
+                <!-- Furniture items will be inserted here by JavaScript -->
+            </div>
+            <div id="furniture-message-box" class="text-center text-gray-400 font-semibold mt-4 h-6"></div>
+        </div>
         
+        <!-- NEW: Garden Screen -->
+        <div id="garden-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-pod-screen')">&larr; Back to Pod</button>
+            <h2 class="text-2xl font-bold text-white text-center mb-4">Pet Garden</h2>
+
+            <div id="garden-container">
+                <div id="garden-sun"></div>
+                <div id="garden-plots">
+                    <div id="plot-0" class="grow-plot"></div>
+                    <div id="plot-1" class="grow-plot"></div>
+                    <div id="plot-2" class="grow-plot"></div>
+                    <div id="plot-3" class="grow-plot"></div>
+                </div>
+                <div id="watering-animation"></div>
+            </div>
+            
+            <div id="garden-message-box" class="text-center text-orange-400 font-semibold mt-4 h-6"></div>
+
+            <div class="grid grid-cols-2 gap-4 mt-6">
+                <button onclick="showScreen('seed-shop-screen')" class="action-button w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg">
+                    Seed Shop 🌱
+                </button>
+                <button id="water-plants-btn" class="action-button w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg">
+                    Water Plants 💧
+                </button>
+            </div>
+        </div>
+
+        <!-- NEW: Seed Shop Screen -->
+        <div id="seed-shop-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('garden-screen')">&larr; Back to Garden</button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Seed Shop</h2>
+                <div id="seed-shop-pot-points-display" class="pot-points-display">0 PP</div>
+            </div>
+            <div id="seed-item-grid" class="grid grid-cols-2 gap-4">
+                <!-- Seed items will be inserted here by JavaScript -->
+            </div>
+            <div id="seed-shop-message-box" class="text-center text-gray-400 font-semibold mt-4 h-6"></div>
+        </div>
+
         <!-- Game Selection Screen -->
         <div id="game-selection-screen" class="app-screen">
             <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
             <h2 class="text-2xl font-bold text-white text-center mb-6">Game Corner</h2>
-            <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
                 <button onclick="showScreen('penalty-screen')" class="action-button w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
-                    ⚽ Penalty Shootout
+                    ⚽<br>Penalty Shootout
                 </button>
                 <button onclick="showScreen('ping-pong-screen')" class="action-button w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
-                    🏓 Ping Pong
+                    🏓<br>Ping Pong
                 </button>
                 <button onclick="showScreen('flappy-pet-screen')" class="action-button w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
-                    🐥 Flappy Pet
+                    🐥<br>Flappy Pet
+                </button>
+                <button onclick="showScreen('shell-game-screen')" class="action-button w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
+                    🏺<br>Where's the Ball?
                 </button>
             </div>
         </div>
@@ -517,6 +857,36 @@
             </div>
         </div>
 
+        <!-- NEW: Shell Game Screen -->
+        <div id="shell-game-screen" class="app-screen">
+            <div class="flex justify-between items-center mb-4">
+                <button class="back-button" onclick="showScreen('game-selection-screen')">&larr; Back to Games</button>
+                <div id="shell-game-score" class="text-white text-lg font-bold">You: 0 | Pet: 0</div>
+            </div>
+
+            <div id="shell-game-board">
+                <div id="shell-cup-1" class="shell-cup">🏺</div>
+                <div id="shell-cup-2" class="shell-cup">🏺</div>
+                <div id="shell-cup-3" class="shell-cup">🏺</div>
+                <div id="shell-ball">🎱</div>
+            </div>
+
+            <div id="shell-game-message" class="text-center text-orange-400 font-bold h-6 mt-4">Watch the ball!</div>
+            
+            <!-- Shell Game Over Modal -->
+            <div id="shell-game-over-modal" class="game-over-modal">
+                <div class="bg-gray-800 p-8 rounded-2xl shadow-lg text-center">
+                    <h2 id="shell-game-winner" class="text-3xl font-bold text-white mb-4">You Win!</h2>
+                    <p id="shell-game-final-score" class="text-xl text-gray-300 mb-6">Final Score: 0 - 0</p>
+                    <p id="shell-game-pp-reward" class="text-xl text-amber-300 font-bold mb-6">+1 Pot Point!</p>
+                    <div class="flex gap-4">
+                        <button onclick="startShellGame()" class="action-button bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full">Play Again</button>
+                        <button onclick="showScreen('game-selection-screen')" class="action-button bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full">Back to Games</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -528,9 +898,8 @@
                 animalSoundSynth.oscillator.type = 'fmsine';
                 animalSoundSynth.envelope.attack = 0.05;
                 animalSoundSynth.envelope.release = 0.2;
-                animalSoundSynth.vibratoRate.value = 10;
-                animalSoundSynth.vibratoAmount.value = 0.4;
-                // Pitch bend for "meow"
+                animalSoundSynth.vibratoRate = 10;
+                animalSoundSynth.vibratoAmount = 0.4;
                 animalSoundSynth.frequency.rampTo("E5", 0.05);
                 animalSoundSynth.frequency.rampTo("C5", 0.1);
                 animalSoundSynth.triggerAttackRelease("E5", "8n", Tone.now());
@@ -540,15 +909,14 @@
                 animalSoundSynth.oscillator.type = 'sine';
                 animalSoundSynth.envelope.attack = 0.001;
                 animalSoundSynth.envelope.release = 0.1;
-                animalSoundSynth.vibratoRate.value = 0;
-                animalSoundSynth.vibratoAmount.value = 0;
+                animalSoundSynth.vibratoRate = 0;
+                animalSoundSynth.vibratoAmount = 0;
                 const now = Tone.now();
                 animalSoundSynth.triggerAttackRelease("C7", "32n", now);
                 animalSoundSynth.triggerAttackRelease("C7", "32n", now + 0.07);
             }},
             'Gorilla': { emoji: '🦍', id: 'gorilla', sound: () => {
                 if (!audioInitialized) return;
-                // Use a filter to make it "grunt"
                 const filter = new Tone.AutoFilter("4n").toDestination().start();
                 const gruntSynth = new Tone.NoiseSynth({
                     noise: { type: 'brown' },
@@ -558,17 +926,15 @@
             }},
             'Giraffe': { emoji: '🦒', id: 'giraffe', sound: () => {
                 if (!audioInitialized) return;
-                // A low, rich "hum"
                 animalSoundSynth.oscillator.type = 'pwm';
                 animalSoundSynth.envelope.attack = 0.2;
                 animalSoundSynth.envelope.release = 0.5;
-                animalSoundSynth.vibratoRate.value = 2;
-                animalSoundSynth.vibratoAmount.value = 0.1;
+                animalSoundSynth.vibratoRate = 2;
+                animalSoundSynth.vibratoAmount = 0.1;
                 animalSoundSynth.triggerAttackRelease("C3", "4n", Tone.now());
             }}, 
             'Beaver': { emoji: '🦫', id: 'beaver', sound: () => {
                 if (!audioInitialized) return;
-                // Quick "chitter"
                 const noise = new Tone.NoiseSynth({
                     noise: { type: 'pink' },
                     envelope: { attack: 0.001, decay: 0.01, sustain: 0 }
@@ -580,27 +946,94 @@
             }},
             'Polar Bear': { emoji: '🐻‍❄️', id: 'polarbear', sound: () => {
                 if (!audioInitialized) return;
-                // Low rumble/growl
                 const filter = new Tone.Filter(80, "lowpass").toDestination();
                 const growl = new Tone.NoiseSynth({
                     noise: { type: 'brown' },
                     envelope: { attack: 0.1, decay: 0.5, sustain: 0.1 }
                 }).connect(filter);
                 growl.triggerAttackRelease("0.5", Tone.now());
+            }},
+            // NEW PETS
+            'Unicorn': { emoji: '🦄', id: 'unicorn', sound: () => {
+                if (!audioInitialized) return;
+                // Magical shimmering sound
+                const synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'fmsine', modulationType: 'triangle' },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.5 },
+                    volume: -10
+                }).toDestination();
+                synth.set({ detune: -1200 });
+                const now = Tone.now();
+                synth.triggerAttackRelease(['C5', 'E5', 'G5'], '8n', now);
+                synth.triggerAttackRelease(['E5', 'G5', 'B5'], '8n', now + 0.1);
+            }},
+            'Spider': { emoji: '🕷️', id: 'spider', sound: () => {
+                if (!audioInitialized) return;
+                // Skittering
+                const noise = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.001, decay: 0.01, sustain: 0 }
+                }).toDestination();
+                const now = Tone.now();
+                noise.triggerAttackRelease("0.01", now);
+                noise.triggerAttackRelease("0.01", now + 0.02);
+                noise.triggerAttackRelease("0.01", now + 0.04);
+                noise.triggerAttackRelease("0.01", now + 0.06);
+            }},
+            'Cow': { emoji: '🐮', id: 'cow', sound: () => {
+                if (!audioInitialized) return;
+                // "Moo" sound
+                animalSoundSynth.oscillator.type = 'fatsawtooth';
+                animalSoundSynth.envelope.attack = 0.1;
+                animalSoundSynth.envelope.release = 0.5;
+                animalSoundSynth.vibratoRate = 1;
+                animalSoundSynth.vibratoAmount = 0.1;
+                animalSoundSynth.frequency.rampTo("G3", 0.1);
+                animalSoundSynth.triggerAttackRelease("G3", "4n", Tone.now());
+            }},
+            'Puppy': { emoji: '🐶', id: 'puppy', sound: () => {
+                if (!audioInitialized) return;
+                // "Yip"
+                animalSoundSynth.oscillator.type = 'triangle';
+                animalSoundSynth.envelope.attack = 0.01;
+                animalSoundSynth.envelope.release = 0.1;
+                animalSoundSynth.vibratoRate = 0;
+                animalSoundSynth.vibratoAmount = 0;
+                const now = Tone.now();
+                animalSoundSynth.frequency.rampTo("A5", 0.01);
+                animalSoundSynth.triggerAttackRelease("A5", "16n", now);
+                animalSoundSynth.frequency.rampTo("G5", 0.05, now + 0.01);
+            }},
+            'Snake': { emoji: '🐍', id: 'snake', sound: () => {
+                if (!audioInitialized) return;
+                // Hiss
+                const hiss = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.1, decay: 0.4, sustain: 0.1 }
+                }).toDestination();
+                hiss.triggerAttackRelease("0.5", Tone.now());
+            }},
+            'Rabbit': { emoji: '🐰', id: 'rabbit', sound: () => {
+                if (!audioInitialized) return;
+                // Thump
+                const thump = new Tone.MembraneSynth({
+                    pitchDecay: 0.05, octaves: 2, envelope: { attack: 0.001, decay: 0.1, sustain: 0 }
+                }).toDestination();
+                thump.triggerAttackRelease("C2", "8n", Tone.now());
             }}
         };
         
         const foodItems = [
-            { name: 'Apple', emoji: '🍎', price: 0, value: 10 },
-            { name: 'Broccoli', emoji: '🥦', price: 0, value: 10 },
-            { name: 'Bread', emoji: '🍞', price: 0, value: 10 },
-            { name: 'Carrot', emoji: '🥕', price: 0, value: 15 },
-            { name: 'Cheese', emoji: '🧀', price: 0, value: 15 },
-            { name: 'Steak', emoji: '🥩', price: 2, value: 30 },
-            { name: 'Sushi', emoji: '🍣', price: 3, value: 35 },
-            { name: 'Donut', emoji: '🍩', price: 4, value: 40 },
-            { name: 'Cake', emoji: '🎂', price: 5, value: 50 },
-            { name: 'Magic Treat', emoji: '💎', price: 10, value: 100 }
+            { name: 'Apple', emoji: '🍎', price: 0, value: 10, id: 'apple' },
+            { name: 'Broccoli', emoji: '🥦', price: 0, value: 10, id: 'broccoli' },
+            { name: 'Bread', emoji: '🍞', price: 0, value: 10, id: 'bread' },
+            { name: 'Carrot', emoji: '🥕', price: 0, value: 15, id: 'carrot' },
+            { name: 'Cheese', emoji: '🧀', price: 0, value: 15, id: 'cheese' },
+            { name: 'Steak', emoji: '🥩', price: 2, value: 30, id: 'steak' },
+            { name: 'Sushi', emoji: '🍣', price: 3, value: 35, id: 'sushi' },
+            { name: 'Donut', emoji: '🍩', price: 4, value: 40, id: 'donut' },
+            { name: 'Cake', emoji: '🎂', price: 5, value: 50, id: 'cake' },
+            { name: 'Magic Treat', emoji: '💎', price: 10, value: 100, id: 'magic_treat' }
         ];
 
         const drinkItems = [
@@ -616,7 +1049,6 @@
             { name: 'Magic Potion', emoji: '🧪', price: 10, value: 100 }
         ];
 
-        // NEW: Accessory Items
         const accessoryItems = {
             hats: [
                 { name: 'None', emoji: '🚫', price: 0, id: 'none' },
@@ -636,6 +1068,35 @@
             ]
         };
 
+        const terrainOptions = {
+            'grass': { name: 'Grass', emoji: '🌿', price: 0, id: 'grass', style: 'radial-gradient(circle at 10% 15%, #fde047 30px, transparent 31px), linear-gradient(to bottom, #87CEEB 0%, #FFFFFF 70%, #22c55e 70%, #16a34a 100%)' }, // Sun + Sky/Grass
+            'jungle': { name: 'Jungle', emoji: '🌳', price: 0, id: 'jungle', style: 'radial-gradient(at 20% 80%, #556B2F 20px, transparent 21px), radial-gradient(at 80% 60%, #556B2F 30px, transparent 31px), linear-gradient(to bottom, #2c5234, #1a3a2a)' }, // Bushes + Dark Green BG
+            'desert': { name: 'Desert', emoji: '🏜️', price: 0, id: 'desert', style: 'radial-gradient(circle at 15% 20%, #fef08a 40px, transparent 41px), linear-gradient(to bottom, #f3b04d 0%, #f59e0b 60%, #d97706 100%)' }, // Sun + Sand
+            'fairy': { name: 'Fairy', emoji: '✨', price: 0, id: 'fairy', style: 'radial-gradient(circle at 20% 30%, white 2px, transparent 3px), radial-gradient(circle at 80% 70%, white 2px, transparent 3px), radial-gradient(circle at 50% 50%, white 1px, transparent 2px), linear-gradient(to bottom, #f0abfc, #a855f7)' }, // Sparkles + Gradient
+            'living_room': { name: 'Living Room', emoji: '🛋️', price: 0, id: 'living_room', style: 'linear-gradient(to bottom, #f3e8ff 0%, #f3e8ff 50%, #8c5a2e 50%, #5e3a1e 100%)' } // Wallpaper / Wood Floor
+        };
+
+        const furnitureItems = {
+            'sofa': { name: 'Sofa', emoji: '🛋️', price: 0, id: 'sofa' },
+            'plant': { name: 'Plant', emoji: '🪴', price: 0, id: 'plant' },
+            'tv': { name: 'TV', emoji: '📺', price: 0, id: 'tv' },
+            'lamp': { name: 'Lamp', emoji: '💡', price: 0, id: 'lamp' },
+            'bed': { name: 'Bed', emoji: '🛏️', price: 2, id: 'bed' },
+            'books': { name: 'Books', emoji: '📚', price: 2, id: 'books' },
+            'globe': { name: 'Globe', emoji: '🌎', price: 3, id: 'globe' },
+            'crystal': { name: 'Crystal', emoji: '🔮', price: 5, id: 'crystal' }
+        };
+
+        // NEW: Garden Data
+        const seedData = {
+            'carrot': { name: 'Carrot', emoji: '🥕', price: 0, growTime: 60, produce: { id: 'carrot', name: 'Carrot', emoji: '🥕', value: 15 } }, // 1 min
+            'tomato': { name: 'Tomato', emoji: '🍅', price: 0, growTime: 180, produce: { id: 'tomato', name: 'Tomato', emoji: '🍅', value: 20 } }, // 3 min
+            'broccoli': { name: 'Broccoli', emoji: '🥦', price: 1, growTime: 300, produce: { id: 'broccoli', name: 'Broccoli', emoji: '🥦', value: 10 } }, // 5 min
+            'strawberry': { name: 'Strawberry', emoji: '🍓', price: 2, growTime: 600, produce: { id: 'strawberry', name: 'Strawberry', emoji: '🍓', value: 30 } }, // 10 min
+            'melon': { name: 'Melon', emoji: '🍈', price: 5, growTime: 1800, produce: { id: 'melon', name: 'Melon', emoji: '🍈', value: 50 } } // 30 min
+        };
+        const DRY_TIME = 3600; // 1 hour in seconds
+
         let currentPetName = null;
         let petStats = {};
         const defaultStats = { 
@@ -645,37 +1106,56 @@
             lastVisitTimestamp: Date.now(),
             customName: null,
             potPoints: 0,
-            accessories: { hat: null, glasses: null } // NEW
+            accessories: { hat: null, glasses: null },
+            terrain: 'grass',
+            furniture: [], // {id, x, y}
+            inventory: [], // NEW: {id, name, emoji, value}
+            gardenPlots: [null, null, null, null] // NEW: {seedId, plantTime, lastWatered}
         };
         let gameLoopInterval = null;
         let pendingItem = null; // For animation
+        let pendingSeed = null; // NEW: For planting
+        let currentPetPage = 0; 
+        const petsPerPage = 6; 
 
         // --- DOM Elements ---
         const homeScreen = document.getElementById('home-screen');
         const petScreen = document.getElementById('pet-screen');
+        const feedMenuScreen = document.getElementById('feed-menu-screen'); // NEW
+        const inventoryScreen = document.getElementById('inventory-screen'); // NEW
         const foodSelectionScreen = document.getElementById('food-selection-screen');
         const drinkSelectionScreen = document.getElementById('drink-selection-screen');
-        const accessoryShopScreen = document.getElementById('accessory-shop-screen'); // NEW
+        const accessoryShopScreen = document.getElementById('accessory-shop-screen');
         const gameSelectionScreen = document.getElementById('game-selection-screen');
         const penaltyScreen = document.getElementById('penalty-screen');
         const pingPongScreen = document.getElementById('ping-pong-screen');
         const flappyPetScreen = document.getElementById('flappy-pet-screen');
+        const shellGameScreen = document.getElementById('shell-game-screen');
+        const petPodScreen = document.getElementById('pet-pod-screen'); 
+        const terrainSelectionScreen = document.getElementById('terrain-selection-screen'); 
+        const furnitureShopScreen = document.getElementById('furniture-shop-screen');
+        const gardenScreen = document.getElementById('garden-screen'); // NEW
+        const seedShopScreen = document.getElementById('seed-shop-screen'); // NEW
         
         const petSelectionButtons = document.getElementById('pet-selection-buttons');
+        const prevPetPageButton = document.getElementById('prev-pet-page'); 
+        const nextPetPageButton = document.getElementById('next-pet-page'); 
+        const petPageDisplay = document.getElementById('pet-page-display'); 
+
         const backButton = document.getElementById('back-btn');
         const potPointsDisplay = document.getElementById('pot-points-display');
         const foodPotPointsDisplay = document.getElementById('food-pot-points-display');
         const drinkPotPointsDisplay = document.getElementById('drink-pot-points-display');
-        const accessoryPotPointsDisplay = document.getElementById('accessory-pot-points-display'); // NEW
+        const accessoryPotPointsDisplay = document.getElementById('accessory-pot-points-display');
         
         const petNameTitle = document.getElementById('pet-name-title');
         const petNameInput = document.getElementById('pet-name-input');
         const editNameButton = document.getElementById('edit-name-btn');
         
         const petImageContainer = document.getElementById('pet-image-container');
-        const petEmojiMain = document.getElementById('pet-emoji-main'); // NEW
-        const petAccessoryHat = document.getElementById('pet-accessory-hat'); // NEW
-        const petAccessoryGlasses = document.getElementById('pet-accessory-glasses'); // NEW
+        const petEmojiMain = document.getElementById('pet-emoji-main');
+        const petAccessoryHat = document.getElementById('pet-accessory-hat');
+        const petAccessoryGlasses = document.getElementById('pet-accessory-glasses');
 
         const foodBar = document.getElementById('food-bar-inner');
         const waterBar = document.getElementById('water-bar-inner');
@@ -683,11 +1163,16 @@
         
         const feedButton = document.getElementById('feed-btn');
         const waterButton = document.getElementById('water-btn');
-        const accessoryButton = document.getElementById('accessory-btn'); // NEW
+        const accessoryButton = document.getElementById('accessory-btn');
+        const podButton = document.getElementById('pod-btn'); 
         const playButton = document.getElementById('play-btn');
         const messageBox = document.getElementById('message-box');
         const actionEmoji = document.getElementById('action-emoji');
         
+        // Inventory Screen
+        const inventoryItemGrid = document.getElementById('inventory-item-grid'); // NEW
+        const inventoryMessageBox = document.getElementById('inventory-message-box'); // NEW
+
         // Food screen
         const foodItemGrid = document.getElementById('food-item-grid');
         const foodMessageBox = document.getElementById('food-message-box');
@@ -697,10 +1182,39 @@
         const drinkMessageBox = document.getElementById('drink-message-box');
 
         // Accessory screen
-        const hatItemGrid = document.getElementById('hat-item-grid'); // NEW
-        const glassesItemGrid = document.getElementById('glasses-item-grid'); // NEW
-        const accessoryMessageBox = document.getElementById('accessory-message-box'); // NEW
+        const hatItemGrid = document.getElementById('hat-item-grid');
+        const glassesItemGrid = document.getElementById('glasses-item-grid');
+        const accessoryMessageBox = document.getElementById('accessory-message-box');
+
+        // Pet Pod Screen
+        const podOwnerName = document.getElementById('pod-owner-name');
+        const petPodContainer = document.getElementById('pet-pod-container');
+        const podPetEmoji = document.getElementById('pod-pet-emoji');
+
+        // Terrain Screen
+        const terrainItemGrid = document.getElementById('terrain-item-grid');
+
+        // Furniture Screen
+        const furniturePotPointsDisplay = document.getElementById('furniture-pot-points-display');
+        const furnitureItemGrid = document.getElementById('furniture-item-grid');
+        const furnitureMessageBox = document.getElementById('furniture-message-box');
         
+        // Garden Screen
+        const gardenPlots = [ // NEW
+            document.getElementById('plot-0'),
+            document.getElementById('plot-1'),
+            document.getElementById('plot-2'),
+            document.getElementById('plot-3')
+        ];
+        const gardenMessageBox = document.getElementById('garden-message-box'); // NEW
+        const waterPlantsButton = document.getElementById('water-plants-btn'); // NEW
+        const wateringAnimation = document.getElementById('watering-animation'); // NEW
+
+        // Seed Shop Screen
+        const seedShopPotPointsDisplay = document.getElementById('seed-shop-pot-points-display'); // NEW
+        const seedItemGrid = document.getElementById('seed-item-grid'); // NEW
+        const seedShopMessageBox = document.getElementById('seed-shop-message-box'); // NEW
+
         // Penalty Game DOM
         const scoreDisplay = document.getElementById('score-display');
         const shotsDisplay = document.getElementById('shots-display');
@@ -710,7 +1224,7 @@
         const ball = document.getElementById('ball');
         const penaltyGameOverModal = document.getElementById('penalty-game-over-modal');
         const finalScoreMessage = document.getElementById('final-score-message');
-        const penaltyPpReward = document.getElementById('penalty-pp-reward'); // NEW
+        const penaltyPpReward = document.getElementById('penalty-pp-reward');
         const playAgainButton = document.getElementById('play-again-btn');
         const modalBackToGamesButton = document.getElementById('modal-back-to-games-btn');
 
@@ -728,7 +1242,7 @@
         const pp_gameOverModal = document.getElementById('ping-pong-game-over-modal');
         const pp_winner = document.getElementById('ping-pong-winner');
         const pp_finalScore = document.getElementById('ping-pong-final-score');
-        const pingPongPpReward = document.getElementById('ping-pong-pp-reward'); // NEW
+        const pingPongPpReward = document.getElementById('ping-pong-pp-reward');
         
         // Ping Pong Game State
         let pp_ball, pp_player, pp_pet, pp_scores;
@@ -740,21 +1254,50 @@
         const fp_scoreDisplay = document.getElementById('flappy-score');
         const fp_gameOverModal = document.getElementById('flappy-game-over-modal');
         const fp_finalScore = document.getElementById('flappy-final-score');
-        const flappyPpReward = document.getElementById('flappy-pp-reward'); // NEW
+        const flappyPpReward = document.getElementById('flappy-pp-reward');
         
         // Flappy Pet Game State
         let fp_pet, fp_gravity, fp_velocity, fp_lift, fp_pipes, fp_score, fp_gameLoop;
-        let fp_petEmoji, fp_pipeSpeed; // NEW: fp_pipeSpeed
+        let fp_petEmoji, fp_pipeSpeed; 
+
+        // Shell Game DOM
+        const sg_scoreDisplay = document.getElementById('shell-game-score');
+        const sg_message = document.getElementById('shell-game-message');
+        const sg_cups = [
+            document.getElementById('shell-cup-1'),
+            document.getElementById('shell-cup-2'),
+            document.getElementById('shell-cup-3')
+        ];
+        const sg_ball = document.getElementById('shell-ball');
+        const sg_gameOverModal = document.getElementById('shell-game-over-modal');
+        const sg_winner = document.getElementById('shell-game-winner');
+        const sg_finalScore = document.getElementById('shell-game-final-score');
+        const sg_ppReward = document.getElementById('shell-game-pp-reward');
+
+        // Shell Game State
+        let sg_round = 0;
+        let sg_scores = { player: 0, pet: 0 };
+        let sg_ballPosition = 0;
+        let sg_isShuffling = false;
+        let sg_playerPick = null;
+
+        // Drag and Drop State
+        let activeDragItem = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
 
         // --- Audio ---
         let audioInitialized = false;
-        let eatSynth, drinkSynth, animalSoundSynth;
+        let eatSynth, drinkSynth, animalSoundSynth, waterSynth, harvestSynth; // Added garden sounds
         // Penalty
         let kickSynth, goalSynth, missSynth;
         // Ping Pong
         let pongBlipSynth, pongScoreSynth;
         // Flappy
         let flapSynth, flappyScoreSynth, flappyCrashSynth;
+        // Shell Game
+        let shuffleSynth, shellWinSynth, shellLoseSynth;
 
 
         function initializeAudio() {
@@ -778,7 +1321,7 @@
                 pongBlipSynth = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0 } }).toDestination();
                 pongScoreSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0 } }).toDestination();
                 
-                // Flappy (NEW SOUNDS)
+                // Flappy
                 flapSynth = new Tone.NoiseSynth({
                     noise: { type: 'pink' },
                     envelope: { attack: 0.001, decay: 0.05, sustain: 0 }
@@ -792,6 +1335,22 @@
                     octaves: 1,
                     envelope: { attack: 0.01, decay: 0.3, sustain: 0 }
                 }).toDestination();
+
+                // Shell Game
+                shuffleSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.001, decay: 0.05, sustain: 0 }
+                }).toDestination();
+                shellWinSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0 } }).toDestination();
+                shellLoseSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0 } }).toDestination();
+
+                // NEW: Garden Sounds
+                waterSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.01, decay: 0.5, sustain: 0 }
+                }).toDestination();
+                harvestSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0 } }).toDestination();
+
 
                 audioInitialized = true;
                 console.log("Audio Initialized");
@@ -826,10 +1385,32 @@
                 if (petStats.happiness === undefined) petStats.happiness = 60;
                 if (petStats.customName === undefined) petStats.customName = null;
                 if (petStats.potPoints === undefined) petStats.potPoints = 0;
-                if (petStats.accessories === undefined) petStats.accessories = { hat: null, glasses: null }; // NEW
+                if (petStats.accessories === undefined) petStats.accessories = { hat: null, glasses: null }; 
+                if (petStats.terrain === undefined) petStats.terrain = 'grass';
+                if (petStats.furniture === undefined) petStats.furniture = [];
+                if (petStats.inventory === undefined) petStats.inventory = []; // NEW
+                if (petStats.gardenPlots === undefined) petStats.gardenPlots = [null, null, null, null]; // NEW
             } else {
-                petStats = { ...defaultStats, lastVisitTimestamp: Date.now() };
+                // BUG FIX: Create a deep copy of accessories/furniture to prevent global bug
+                petStats = { 
+                    ...defaultStats, 
+                    accessories: { ...defaultStats.accessories }, 
+                    furniture: [ ...defaultStats.furniture ], 
+                    inventory: [ ...defaultStats.inventory ], // NEW
+                    gardenPlots: [ ...defaultStats.gardenPlots ], // NEW
+                    lastVisitTimestamp: Date.now() 
+                };
             }
+            
+            // NEW: Migrate old string-based furniture data to new object-based data
+            if (petStats.furniture.length > 0 && typeof petStats.furniture[0] === 'string') {
+                petStats.furniture = petStats.furniture.map((itemId, index) => {
+                    // Place in a default grid
+                    return { id: itemId, x: (index % 4) * 60 + 20, y: Math.floor(index / 4) * 60 + 80 };
+                });
+                saveStats(); // Save the migrated data
+            }
+
 
             // --- OFFLINE LOGIC ---
             const now = Date.now();
@@ -863,20 +1444,18 @@
             }
             
             // --- Name Update Logic ---
+            const petDisplayName = petStats.customName ? petStats.customName : `My ${currentPetName}`;
             if (petNameInput.classList.contains('hidden')) {
-                if (petStats.customName) {
-                    petNameTitle.textContent = petStats.customName;
-                    petNameInput.value = petStats.customName;
-                } else {
-                    petNameTitle.textContent = `My ${currentPetName}`;
-                    petNameInput.value = `My ${currentPetName}`;
-                }
+                petNameTitle.textContent = petDisplayName;
+                petNameInput.value = petDisplayName;
             }
+            podOwnerName.textContent = `${petDisplayName}'s Pod`; // NEW
             
             // Update pet image
             petEmojiMain.textContent = petOptions[currentPetName].emoji;
             goalkeeper.textContent = petOptions[currentPetName].emoji;
             fp_petEmoji = petOptions[currentPetName].emoji;
+            podPetEmoji.textContent = petOptions[currentPetName].emoji; // NEW
 
             // NEW: Update accessories
             petAccessoryHat.textContent = petStats.accessories.hat ? accessoryItems.hats.find(h => h.id === petStats.accessories.hat)?.emoji || '' : '';
@@ -895,7 +1474,9 @@
             potPointsDisplay.textContent = `${petStats.potPoints} PP`;
             foodPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
             drinkPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
-            accessoryPotPointsDisplay.textContent = `${petStats.potPoints} PP`; // NEW
+            accessoryPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
+            furniturePotPointsDisplay.textContent = `${petStats.potPoints} PP`;
+            seedShopPotPointsDisplay.textContent = `${petStats.potPoints} PP`; // NEW
             
             // Disable buttons if full
             waterButton.disabled = petStats.water >= 100;
@@ -910,7 +1491,10 @@
                 // Update all menu button states
                 updateFoodMenu();
                 updateDrinkMenu();
-                updateAccessoryMenu(); // NEW
+                updateAccessoryMenu(); 
+                updateTerrainMenu(); 
+                updateFurnitureMenu();
+                updateInventoryScreen(); // NEW
             }
         }
 
@@ -944,13 +1528,51 @@
             }, 2000);
         }
 
-        // NEW: Accessory Message
         function showAccessoryMessage(text, isGood = true) {
             accessoryMessageBox.textContent = text;
             accessoryMessageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-4 h-6 mb-4' : 'text-center text-red-400 font-semibold mt-4 h-6 mb-4';
             setTimeout(() => {
                 if (accessoryMessageBox.textContent === text) {
                     accessoryMessageBox.textContent = '';
+                }
+            }, 2000);
+        }
+        
+        function showFurnitureMessage(text, isGood = true) {
+            furnitureMessageBox.textContent = text;
+            furnitureMessageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-4 h-6' : 'text-center text-red-400 font-semibold mt-4 h-6';
+            setTimeout(() => {
+                if (furnitureMessageBox.textContent === text) {
+                    furnitureMessageBox.textContent = '';
+                }
+            }, 2000);
+        }
+
+        // NEW: Garden/Seed Messages
+        function showGardenMessage(text, isGood = true) {
+            gardenMessageBox.textContent = text;
+            gardenMessageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-4 h-6' : 'text-center text-red-400 font-semibold mt-4 h-6';
+            setTimeout(() => {
+                if (gardenMessageBox.textContent === text) {
+                    gardenMessageBox.textContent = '';
+                }
+            }, 2000);
+        }
+        function showSeedShopMessage(text, isGood = true) {
+            seedShopMessageBox.textContent = text;
+            seedShopMessageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-4 h-6' : 'text-center text-red-400 font-semibold mt-4 h-6';
+            setTimeout(() => {
+                if (seedShopMessageBox.textContent === text) {
+                    seedShopMessageBox.textContent = '';
+                }
+            }, 2000);
+        }
+        function showInventoryMessage(text, isGood = true) {
+            inventoryMessageBox.textContent = text;
+            inventoryMessageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-4 h-6' : 'text-center text-red-400 font-semibold mt-4 h-6';
+            setTimeout(() => {
+                if (inventoryMessageBox.textContent === text) {
+                    inventoryMessageBox.textContent = '';
                 }
             }, 2000);
         }
@@ -1020,10 +1642,8 @@
                 petNameTitle.textContent = newName;
                 saveStats();
                 
-                const buttonToUpdate = document.querySelector(`#pet-selection-buttons button[data-petname="${currentPetName}"]`);
-                if (buttonToUpdate) {
-                    buttonToUpdate.innerHTML = `${petOptions[currentPetName].emoji} <br> ${petStats.customName}`;
-                }
+                // NEW: Update home screen button text
+                renderPetSelection(currentPetPage);
             }
             toggleNameEdit(false);
             
@@ -1032,6 +1652,44 @@
             }
         }
         
+        // --- NEW: Inventory Logic ---
+        function updateInventoryScreen() {
+            inventoryItemGrid.innerHTML = ''; // Clear old grid
+            if (petStats.inventory.length === 0) {
+                showInventoryMessage("Your inventory is empty.", false);
+            } else {
+                showInventoryMessage("", true);
+            }
+
+            petStats.inventory.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item-item';
+                itemDiv.innerHTML = `
+                    <div class="item-emoji">${item.emoji}</div>
+                    <div class="text-white font-bold">${item.name}</div>
+                    <div class="item-price price-free">
+                        +${item.value} Food
+                    </div>
+                `;
+                itemDiv.onclick = () => feedFromInventory(item, index);
+                inventoryItemGrid.appendChild(itemDiv);
+            });
+        }
+        
+        function feedFromInventory(item, index) {
+            if (petStats.food >= 100) {
+                showInventoryMessage("I'm too full!", false);
+                return;
+            }
+            
+            // Remove item from inventory
+            petStats.inventory.splice(index, 1);
+            
+            // Set for animation and go back to pet screen
+            pendingItem = item; 
+            showScreen('pet-screen');
+        }
+
         // --- Food Selection Logic ---
         function updateFoodMenu() {
             foodItemGrid.innerHTML = ''; // Clear old grid
@@ -1119,7 +1777,7 @@
             showScreen('pet-screen');
         }
 
-        // --- NEW Accessory Selection Logic ---
+        // --- Accessory Selection Logic ---
         function updateAccessoryMenu() {
             hatItemGrid.innerHTML = '';
             glassesItemGrid.innerHTML = '';
@@ -1187,6 +1845,372 @@
             updateUI(); // Refresh pet screen (though it's not visible)
         }
 
+        // --- Pod / Terrain / Furniture Logic ---
+
+        function renderPetPod() {
+            // Set terrain background
+            const terrain = terrainOptions[petStats.terrain] || terrainOptions['grass'];
+            petPodContainer.style.background = terrain.style;
+            
+            // Clear only old furniture
+            petPodContainer.querySelectorAll('.pod-furniture-item').forEach(el => el.remove());
+            
+            // Render furniture
+            if (petStats.furniture && petStats.furniture.length > 0) {
+                petStats.furniture.forEach((itemObj, index) => {
+                    const item = furnitureItems[itemObj.id];
+                    if (item) {
+                        const itemEl = document.createElement('span');
+                        itemEl.className = 'pod-furniture-item';
+                        itemEl.textContent = item.emoji;
+                        itemEl.style.left = itemObj.x + 'px';
+                        itemEl.style.top = itemObj.y + 'px';
+                        itemEl.dataset.furnitureIndex = index; // Store index to update pos
+                        
+                        // Add drag handlers
+                        itemEl.addEventListener('mousedown', onDragStart);
+                        itemEl.addEventListener('touchstart', onDragStart, { passive: false });
+                        
+                        petPodContainer.appendChild(itemEl);
+                    }
+                });
+            }
+        }
+
+        function updateTerrainMenu() {
+            terrainItemGrid.innerHTML = '';
+            Object.values(terrainOptions).forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item-item';
+                if (petStats.terrain === item.id) {
+                    itemDiv.classList.add('selected');
+                }
+                
+                itemDiv.innerHTML = `
+                    <div class="item-emoji">${item.emoji}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price price-free">FREE</div>
+                `;
+                itemDiv.onclick = () => selectTerrain(item.id);
+                terrainItemGrid.appendChild(itemDiv);
+            });
+        }
+
+        function selectTerrain(terrainId) {
+            petStats.terrain = terrainId;
+            saveStats();
+            updateTerrainMenu(); // Re-render menu to show selection
+            renderPetPod(); // Update the pod screen (even though not visible)
+            
+            // Go back to pod screen after a short delay
+            setTimeout(() => {
+                showScreen('pet-pod-screen');
+            }, 300);
+        }
+
+        function updateFurnitureMenu() {
+            furnitureItemGrid.innerHTML = '';
+            furniturePotPointsDisplay.textContent = `${petStats.potPoints} PP`;
+
+            Object.values(furnitureItems).forEach(item => {
+                const itemDiv = document.createElement('div');
+                const canAfford = petStats.potPoints >= item.price;
+                // Check if an object with this ID is in the array
+                const isOwned = petStats.furniture.some(f => f.id === item.id);
+
+                itemDiv.className = 'item-item';
+                itemDiv.innerHTML = `
+                    <div class="item-emoji">${item.emoji}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price ${item.price === 0 ? 'price-free' : 'price-pp'}">
+                        ${isOwned ? 'OWNED' : (item.price === 0 ? 'FREE' : `${item.price} PP`)}
+                    </div>
+                `;
+                
+                if (isOwned) {
+                    itemDiv.classList.add('owned');
+                } else if (!canAfford) {
+                    itemDiv.classList.add('disabled');
+                } else {
+                    itemDiv.onclick = () => buyFurniture(item);
+                }
+                furnitureItemGrid.appendChild(itemDiv);
+            });
+        }
+
+        function buyFurniture(item) {
+            if (petStats.potPoints < item.price) {
+                showFurnitureMessage("Not enough points!", false);
+                return;
+            }
+            if (petStats.furniture.some(f => f.id === item.id)) {
+                showFurnitureMessage("You already own this!", false);
+                return;
+            }
+            
+            petStats.potPoints -= item.price;
+            // Add as an object with default position
+            petStats.furniture.push({ id: item.id, x: 100, y: 150 }); 
+            saveStats();
+            showFurnitureMessage(`Bought ${item.name}!`, true);
+            updateFurnitureMenu(); // Refresh shop to show "OWNED"
+            updateUI(); // Update PP display
+        }
+
+        // --- Drag and Drop Functions ---
+        
+        function getDragEventPos(e) {
+            if (e.touches) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        function onDragStart(e) {
+            e.preventDefault();
+            activeDragItem = e.target;
+            
+            const pos = getDragEventPos(e);
+            const itemRect = activeDragItem.getBoundingClientRect();
+            
+            dragOffsetX = pos.x - itemRect.left;
+            dragOffsetY = pos.y - itemRect.top;
+            
+            activeDragItem.classList.add('dragging');
+            
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchend', onDragEnd);
+        }
+
+        function onDragMove(e) {
+            if (!activeDragItem) return;
+            e.preventDefault();
+            
+            const pos = getDragEventPos(e);
+            const podRect = petPodContainer.getBoundingClientRect();
+
+            let newX = pos.x - podRect.left - dragOffsetX;
+            let newY = pos.y - podRect.top - dragOffsetY;
+            
+            // Constrain to pod boundaries
+            newX = Math.max(0, Math.min(newX, podRect.width - activeDragItem.offsetWidth));
+            newY = Math.max(0, Math.min(newY, podRect.height - activeDragItem.offsetHeight));
+            
+            activeDragItem.style.left = newX + 'px';
+            activeDragItem.style.top = newY + 'px';
+        }
+
+        function onDragEnd(e) {
+            if (!activeDragItem) return;
+            
+            const index = parseInt(activeDragItem.dataset.furnitureIndex, 10);
+            const newX = parseFloat(activeDragItem.style.left);
+            const newY = parseFloat(activeDragItem.style.top);
+
+            // Save the new position
+            if (petStats.furniture[index]) {
+                petStats.furniture[index].x = newX;
+                petStats.furniture[index].y = newY;
+                saveStats();
+            }
+            
+            activeDragItem.classList.remove('dragging');
+            activeDragItem = null;
+            
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchend', onDragEnd);
+        }
+
+
+        // --- NEW: Garden Logic ---
+
+        function updateGarden() {
+            if (!currentPetName) return;
+            
+            let canPlant = pendingSeed !== null;
+            let planted = false;
+            
+            petStats.gardenPlots.forEach((plot, index) => {
+                const plotEl = gardenPlots[index];
+                plotEl.innerHTML = ''; // Clear old content
+                plotEl.classList.remove('dry', 'watered', 'mature');
+                plotEl.onclick = null; // Clear old click handler
+
+                if (plot) {
+                    const seed = seedData[plot.seedId];
+                    const timeSincePlanted = (Date.now() - plot.plantTime) / 1000;
+                    const timeSinceWatered = (Date.now() - plot.lastWatered) / 1000;
+                    
+                    if (timeSincePlanted >= seed.growTime) {
+                        // MATURE
+                        plotEl.classList.add('mature');
+                        plotEl.innerHTML = `<button class="grow-plot-button">${seed.produce.emoji}</button>`;
+                        plotEl.onclick = () => harvestPlant(index);
+                    } else if (timeSinceWatered > DRY_TIME) {
+                        // DRY
+                        plotEl.classList.add('dry');
+                        plotEl.innerHTML = '🥀';
+                    } else {
+                        // GROWING
+                        plotEl.classList.add('watered');
+                        plotEl.innerHTML = '🌱';
+                    }
+                } else {
+                    // EMPTY
+                    if (canPlant) {
+                        plotEl.innerHTML = `+`;
+                        plotEl.style.cursor = 'copy';
+                        plotEl.onclick = () => {
+                            if (planted) return; // Only plant once per click
+                            planted = true;
+                            plantSeed(index, pendingSeed);
+                            pendingSeed = null; // Clear pending seed
+                            updateGarden(); // Re-render garden
+                        };
+                    } else {
+                        plotEl.innerHTML = '';
+                        plotEl.style.cursor = 'default';
+                    }
+                }
+            });
+            
+            if (pendingSeed) {
+                showGardenMessage(`Click an empty plot to plant your ${pendingSeed.name}!`, true);
+            } else {
+                showGardenMessage('', true);
+            }
+        }
+
+        function waterPlants() {
+            if (audioInitialized) waterSynth.triggerAttackRelease("0.5");
+            
+            // Show animation
+            wateringAnimation.style.display = 'block';
+            wateringAnimation.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'water-drop';
+                drop.textContent = '💧';
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.animationDelay = `${Math.random() * 1}s`;
+                wateringAnimation.appendChild(drop);
+            }
+            
+            let allWatered = true;
+            petStats.gardenPlots.forEach(plot => {
+                if (plot) {
+                    plot.lastWatered = Date.now();
+                } else {
+                    allWatered = false;
+                }
+            });
+            
+            if (allWatered) {
+                showGardenMessage("All plants watered!", true);
+            } else {
+                showGardenMessage("Plots watered!", true);
+            }
+            
+            saveStats();
+            updateGarden(); // Re-render plots to show new "watered" state
+
+            setTimeout(() => {
+                wateringAnimation.style.display = 'none';
+            }, 1000); // Animation duration
+        }
+        
+        function updateSeedShop() {
+            seedItemGrid.innerHTML = '';
+            seedShopPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
+            
+            Object.values(seedData).forEach(item => {
+                const itemDiv = document.createElement('div');
+                const canAfford = petStats.potPoints >= item.price;
+                
+                itemDiv.className = 'item-item';
+                itemDiv.innerHTML = `
+                    <div class="item-emoji">${item.emoji}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price ${item.price === 0 ? 'price-free' : 'price-pp'}">
+                        ${item.price === 0 ? 'FREE' : `${item.price} PP`}
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1">${item.growTime / 60} min</div>
+                `;
+                
+                if (!canAfford) {
+                    itemDiv.classList.add('disabled');
+                } else {
+                    itemDiv.onclick = () => buySeed(item);
+                }
+                seedItemGrid.appendChild(itemDiv);
+            });
+        }
+        
+        function buySeed(seed) {
+            if (petStats.potPoints < seed.price) {
+                showSeedShopMessage("Not enough points!", false);
+                return;
+            }
+            
+            // Check if all plots are full
+            if (petStats.gardenPlots.every(plot => plot !== null)) {
+                showSeedShopMessage("Your garden plots are full!", false);
+                return;
+            }
+            
+            petStats.potPoints -= seed.price;
+            pendingSeed = seed; // Set seed to be planted
+            saveStats();
+            updateUI();
+            showScreen('garden-screen');
+        }
+
+        function plantSeed(plotIndex, seed) {
+            if (petStats.gardenPlots[plotIndex] !== null) {
+                showGardenMessage("This plot is not empty!", false);
+                return;
+            }
+            
+            petStats.gardenPlots[plotIndex] = {
+                seedId: seed.id,
+                plantTime: Date.now(),
+                lastWatered: Date.now()
+            };
+            
+            pendingSeed = null; // Clear pending seed
+            showGardenMessage(`Planted a ${seed.name}!`, true);
+            saveStats();
+            updateGarden();
+        }
+
+        function harvestPlant(plotIndex) {
+            const plot = petStats.gardenPlots[plotIndex];
+            if (!plot) return;
+            
+            const seed = seedData[plot.seedId];
+            
+            // Add produce to inventory
+            petStats.inventory.push(seed.produce);
+            
+            // Clear plot
+            petStats.gardenPlots[plotIndex] = null;
+            
+            if (audioInitialized) {
+                harvestSynth.triggerAttackRelease("C5", "8n", Tone.now());
+                harvestSynth.triggerAttackRelease("G5", "8n", Tone.now() + 0.1);
+            }
+            
+            showGardenMessage(`Harvested 1 ${seed.name}!`, true);
+            saveStats();
+            updateGarden();
+            updateInventoryScreen(); // Update inventory
+        }
+
         // --- Animation Function ---
         function animatePetAction(item) {
             actionEmoji.textContent = item.emoji;
@@ -1221,6 +2245,8 @@
             // Stop any active game loops
             if (pp_gameLoop) cancelAnimationFrame(pp_gameLoop);
             if (fp_gameLoop) cancelAnimationFrame(fp_gameLoop);
+            // NEW: Stop shell game
+            sg_isShuffling = true; // Use this flag to stop any pending timeouts
             
             // Hide all screens
             document.querySelectorAll('.app-screen').forEach(screen => {
@@ -1234,7 +2260,7 @@
                     showMessage(`So fun! +${reward} Happiness!`);
                 }
                 if (points > 0) {
-                    petStats.potPoints += points;
+                    // This message is shown when returning from the game menu
                     showMessage(`+${points} Pot Point!`);
                 }
 
@@ -1257,6 +2283,7 @@
                     clearInterval(gameLoopInterval);
                     gameLoopInterval = null;
                 }
+                renderPetSelection(currentPetPage); // NEW: Re-render in case names changed
             } else {
                 // Pause pet loop when not on pet screen
                 if (gameLoopInterval) {
@@ -1265,14 +2292,32 @@
                 }
                 
                 // Specific init functions for screens
+                if (screenId === 'inventory-screen') { // NEW
+                    updateInventoryScreen();
+                }
                 if (screenId === 'food-selection-screen') {
                     updateFoodMenu();
                 }
                 if (screenId === 'drink-selection-screen') {
                     updateDrinkMenu();
                 }
-                if (screenId === 'accessory-shop-screen') { // NEW
+                if (screenId === 'accessory-shop-screen') { 
                     updateAccessoryMenu();
+                }
+                if (screenId === 'pet-pod-screen') { 
+                    renderPetPod();
+                }
+                if (screenId === 'terrain-selection-screen') { 
+                    updateTerrainMenu();
+                }
+                if (screenId === 'furniture-shop-screen') { 
+                    updateFurnitureMenu();
+                }
+                if (screenId === 'garden-screen') { // NEW
+                    updateGarden();
+                }
+                if (screenId === 'seed-shop-screen') { // NEW
+                    updateSeedShop();
                 }
                 if (screenId === 'penalty-screen') {
                     resetPenaltyGame();
@@ -1282,6 +2327,9 @@
                 }
                 if (screenId === 'flappy-pet-screen') {
                     startFlappyPet();
+                }
+                if (screenId === 'shell-game-screen') { 
+                    startShellGame();
                 }
             }
             
@@ -1307,6 +2355,7 @@
         
         function resetBall() {
             p_ballKicked = false;
+            ball.style.animation = 'none'; // NEW: Reset animation
             ball.style.transform = "translate(0, 0)";
             ball.style.opacity = 1;
             goalkeeper.style.transform = "translateX(0)";
@@ -1320,11 +2369,17 @@
         
         function showPenaltyGameOver() {
             finalScoreMessage.textContent = `You scored ${p_score} out of 3!`;
-            // NEW: Conditional Pot Point display
-            const pointsWon = p_score > 1 ? 1 : 0;
+            // BUG FIX: Award happiness here
+            petStats.happiness = Math.min(100, petStats.happiness + (p_score * 10));
+
+            // BUG FIX: Award 1 point for just playing (score >= 0)
+            const pointsWon = 1; 
             if (pointsWon > 0) {
                 penaltyPpReward.textContent = "+1 Pot Point!";
                 penaltyPpReward.style.display = 'block';
+                petStats.potPoints += pointsWon; 
+                saveStats();
+                updateUI();
             } else {
                 penaltyPpReward.style.display = 'none';
             }
@@ -1366,18 +2421,30 @@
             const keeperDive = (Math.random() - 0.5) * goalWidth * 0.8;
             goalkeeper.style.transform = `translateX(${keeperDive}px)`;
             
+            // NEW: Curveball logic
             let targetX = velocityX * 100;
             let targetY = -250 - (velocityY * 50);
             targetX = Math.max(-150, Math.min(150, targetX));
             
-            ball.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.8)`;
-            ball.style.opacity = 0;
+            // Add curve based on horizontal flick speed
+            const curveX = targetX / 2 + (velocityX * 50); 
+            const curveY = targetY / 2;
+
+            ball.style.setProperty('--target-x', `${targetX}px`);
+            ball.style.setProperty('--target-y', `${targetY}px`);
+            ball.style.setProperty('--curve-x', `${curveX}px`);
+            ball.style.setProperty('--curve-y', `${curveY}px`);
+            ball.style.animation = 'curve-ball 0.5s ease-out forwards';
 
             setTimeout(() => {
                 const goalRect = goal.getBoundingClientRect();
                 const keeperRect = goalkeeper.getBoundingClientRect();
-                const ballFinalX = ball.getBoundingClientRect().x + targetX;
                 
+                // Get the *final* position from the animation
+                const ballComputedStyle = window.getComputedStyle(ball);
+                const transformMatrix = new DOMMatrix(ballComputedStyle.transform);
+                const ballFinalX = ball.getBoundingClientRect().x + transformMatrix.e;
+
                 if (ballFinalX > keeperRect.left && ballFinalX < keeperRect.right) {
                     gameMessage.textContent = "SAVED!";
                     if (audioInitialized) missSynth.triggerAttackRelease("0.3");
@@ -1402,7 +2469,7 @@
                         showPenaltyGameOver();
                     }
                 }, 1500); 
-            }, 500);
+            }, 500); // Must match animation duration
         }
         
         function getEventPos(e) {
@@ -1426,8 +2493,10 @@
             pp_scores = { player: 0, pet: 0 };
             updatePingPongScore();
             
-            pp_canvas.addEventListener('mousemove', movePlayerPaddle);
+            // NEW: Added touchstart for better responsiveness
+            pp_canvas.addEventListener('touchstart', movePlayerPaddle, { passive: true });
             pp_canvas.addEventListener('touchmove', movePlayerPaddle, { passive: true });
+            pp_canvas.addEventListener('mousemove', movePlayerPaddle);
             
             pp_gameLoop = requestAnimationFrame(drawPingPong);
         }
@@ -1435,6 +2504,7 @@
         function movePlayerPaddle(e) {
             let y;
             if (e.touches) {
+                // Use the first touch in the list
                 y = e.touches[0].clientY - pp_canvas.getBoundingClientRect().top;
             } else {
                 y = e.clientY - pp_canvas.getBoundingClientRect().top;
@@ -1493,8 +2563,8 @@
                 if (audioInitialized) pongBlipSynth.triggerAttackRelease("G4", "32n");
             }
 
-            // Pet AI
-            pp_pet.y += (pp_ball.y - (pp_pet.y + pp_pet.h / 2)) * 0.08; // Eased tracking
+            // Pet AI (NEW: Easier AI)
+            pp_pet.y += (pp_ball.y - (pp_pet.y + pp_pet.h / 2)) * 0.045; // Slower tracking
             pp_pet.y = Math.max(0, Math.min(pp_canvas.height - pp_pet.h, pp_pet.y));
             
             // Score
@@ -1530,7 +2600,8 @@
             pp_gameLoop = null;
             
             const playerWin = pp_scores.player === 5;
-            const pointsWon = playerWin ? 1 : 0; // NEW: Pot point logic
+            // BUG FIX: Award 1 point for just playing
+            const pointsWon = 1; 
             
             pp_winner.textContent = playerWin ? "You Win!" : "Pet Wins!";
             pp_finalScore.textContent = `Final Score: ${pp_scores.player} - ${pp_scores.pet}`;
@@ -1557,12 +2628,12 @@
             fp_gameOverModal.style.display = 'none';
 
             fp_pet = { x: 50, y: 150, r: 15 };
-            fp_gravity = 0.4;
+            fp_gravity = 0.3; // NEW: Easier gravity
             fp_velocity = 0;
-            fp_lift = -8;
+            fp_lift = -7; // NEW: Softer flap
             fp_pipes = [];
             fp_score = 0;
-            fp_pipeSpeed = 3; // NEW: Difficulty speed
+            fp_pipeSpeed = 2; // NEW: Slower start speed
             fp_scoreDisplay.textContent = '0';
             
             fp_pipes.push({ x: fp_canvas.width, w: 40, top: 0, bottom: Math.random() * (fp_canvas.height / 2) + 50 });
@@ -1597,7 +2668,7 @@
             // Draw Pipes
             for (let i = 0; i < fp_pipes.length; i++) {
                 const pipe = fp_pipes[i];
-                const pipeGap = 120;
+                const pipeGap = 140; // NEW: Wider gap
                 
                 fp_ctx.fillStyle = '#059669'; // Green
                 
@@ -1615,8 +2686,8 @@
             fp_velocity += fp_gravity;
             fp_pet.y += fp_velocity;
             
-            // NEW: Increase speed over time
-            fp_pipeSpeed += 0.001;
+            // NEW: Slower acceleration
+            fp_pipeSpeed += 0.0005;
 
             // Ground collision
             if (fp_pet.y + fp_pet.r > fp_canvas.height || fp_pet.y - fp_pet.r < 0) {
@@ -1630,7 +2701,7 @@
                 pipe.x -= fp_pipeSpeed; // Use variable speed
 
                 // Collision
-                const pipeGap = 120;
+                const pipeGap = 140; // NEW: Wider gap
                 if (fp_pet.x + fp_pet.r > pipe.x && fp_pet.x - fp_pet.r < pipe.x + pipe.w) {
                     if (fp_pet.y - fp_pet.r < pipe.bottom || fp_pet.y + fp_pet.r > pipe.bottom + pipeGap) {
                         endFlappyPet();
@@ -1674,7 +2745,8 @@
                 flappyCrashSynth.triggerAttackRelease("0.2");
             }
             
-            const pointsWon = fp_score >= 10 ? 1 : 0; // NEW: Pot point logic
+            // BUG FIX: Award 1 point for just playing
+            const pointsWon = 1; 
 
             fp_finalScore.textContent = `Your score: ${fp_score}`;
             
@@ -1694,11 +2766,219 @@
             updateUI();
         }
 
+        // --- NEW: Shell Game Logic ---
+        function startShellGame() {
+            sg_round = 0;
+            sg_scores = { player: 0, pet: 0 };
+            sg_gameOverModal.style.display = 'none';
+            sg_isShuffling = false;
+            startShellRound();
+        }
+
+        function updateShellGameScore() {
+            sg_scoreDisplay.textContent = `You: ${sg_scores.player} | Pet: ${sg_scores.pet}`;
+        }
+
+        function startShellRound() {
+            sg_isShuffling = true; // Disable clicks
+            sg_playerPick = null;
+            sg_round++;
+            sg_message.textContent = `Round ${sg_round}! Watch the ball...`;
+            updateShellGameScore();
+            
+            // Reset cup styles
+            sg_cups.forEach(cup => {
+                cup.classList.remove('up', 'selected-player', 'selected-pet');
+                cup.style.zIndex = 10;
+            });
+            
+            // Pick a random ball position
+            sg_ballPosition = Math.floor(Math.random() * 3);
+            
+            // 1. Reset ball and cup positions
+            const targetCup = sg_cups[sg_ballPosition];
+            sg_ball.style.transform = `translateX(${targetCup.offsetLeft + (targetCup.offsetWidth / 2) - (sg_ball.offsetWidth / 2) - sg_cups[0].offsetLeft}px)`;
+            sg_ball.style.opacity = 1;
+
+            // 2. Lift the cup
+            setTimeout(() => {
+                if (sg_isShuffling) targetCup.classList.add('up');
+            }, 500);
+            
+            // 3. Lower the cup
+            setTimeout(() => {
+                if (sg_isShuffling) {
+                    targetCup.classList.remove('up');
+                    sg_ball.style.opacity = 0; // Hide ball
+                }
+            }, 1500);
+
+            // 4. Start shuffling
+            setTimeout(() => {
+                if (sg_isShuffling) {
+                    sg_message.textContent = "Shuffling...";
+                    shuffleCups(sg_round + 2); // Shuffle 3, 4, then 5 times
+                }
+            }, 2000);
+        }
+
+        async function shuffleCups(times) {
+            if (times === 0) {
+                sg_isShuffling = false;
+                sg_message.textContent = "Where is the ball?";
+                return;
+            }
+            if (!sg_isShuffling) return; // Game was exited
+
+            if (audioInitialized) shuffleSynth.triggerAttackRelease("0.05");
+
+            // Pick two random, different cups to swap
+            let cupAIndex = Math.floor(Math.random() * 3);
+            let cupBIndex = Math.floor(Math.random() * 3);
+            while (cupAIndex === cupBIndex) {
+                cupBIndex = Math.floor(Math.random() * 3);
+            }
+            
+            const cupA = sg_cups[cupAIndex];
+            const cupB = sg_cups[cupBIndex];
+
+            // Get positions
+            const posA = cupA.style.transform || `translateX(${cupA.offsetLeft - sg_cups[0].offsetLeft}px)`;
+            const posB = cupB.style.transform || `translateX(${cupB.offsetLeft - sg_cups[0].offsetLeft}px)`;
+
+            // Swap z-index to make it look real
+            if (cupAIndex < cupBIndex) {
+                cupA.style.zIndex = 12;
+                cupB.style.zIndex = 10;
+            } else {
+                cupA.style.zIndex = 10;
+                cupB.style.zIndex = 12;
+            }
+            
+            // Add shuffling class for linear animation
+            cupA.classList.add('shuffling');
+            cupB.classList.add('shuffling');
+            
+            // Apply new transforms
+            cupA.style.transform = posB;
+            cupB.style.transform = posA;
+
+            // Wait for transition to end
+            const shuffleSpeed = Math.max(100, 300 - (sg_round * 50)); // Gets faster
+            await new Promise(res => setTimeout(res, shuffleSpeed));
+            
+            // Remove class to go back to ease-in-out
+            cupA.classList.remove('shuffling');
+            cupB.classList.remove('shuffling');
+
+            // Swap them in the array to keep track
+            [sg_cups[cupAIndex], sg_cups[cupBIndex]] = [sg_cups[cupBIndex], sg_cups[cupAIndex]];
+            
+            // Recurse
+            setTimeout(() => shuffleCups(times - 1), 100);
+        }
+
+        function handlePlayerCupPick(pickIndex) {
+            if (sg_isShuffling || sg_playerPick !== null) return;
+            sg_isShuffling = true; // Lock in choice
+            sg_playerPick = pickIndex;
+            
+            sg_cups[sg_playerPick].classList.add('selected-player');
+            sg_message.textContent = "You picked... now the pet!";
+
+            // Pet picks
+            setTimeout(() => {
+                let petPick = Math.floor(Math.random() * 3);
+                while (petPick === sg_playerPick) {
+                    petPick = Math.floor(Math.random() * 3);
+                }
+                sg_cups[petPick].classList.add('selected-pet');
+
+                // Reveal
+                setTimeout(() => revealShellGame(sg_playerPick, petPick), 1500);
+            }, 1000);
+        }
+
+        function revealShellGame(playerPick, petPick) {
+            // Find the cup that actually has the ball
+            const correctCup = sg_cups[sg_ballPosition];
+            const correctCupIndex = sg_cups.indexOf(correctCup);
+
+            // Move ball to correct cup's position (still hidden)
+            sg_ball.style.transform = correctCup.style.transform;
+            sg_ball.style.opacity = 1;
+            
+            // Lift all cups
+            sg_cups.forEach(cup => cup.classList.add('up'));
+            
+            let playerWon = (playerPick === correctCupIndex);
+            let petWon = (petPick === correctCupIndex);
+            
+            if (playerWon) {
+                sg_message.textContent = "You got it!";
+                sg_scores.player++;
+                if (audioInitialized) shellWinSynth.triggerAttackRelease("C5", "8n");
+            } else if (petWon) {
+                sg_message.textContent = "Pet got it!";
+                sg_scores.pet++;
+                if (audioInitialized) shellLoseSynth.triggerAttackRelease("C4", "8n");
+            } else {
+                sg_message.textContent = "Nobody got it!";
+                if (audioInitialized) shellLoseSynth.triggerAttackRelease("C4", "8n");
+            }
+
+            updateShellGameScore();
+            
+            setTimeout(() => {
+                if (sg_round >= 3) {
+                    showShellGameOver();
+                } else {
+                    startShellRound();
+                }
+            }, 2500);
+        }
+
+        function showShellGameOver() {
+            sg_isShuffling = true; // Stop game
+            
+            const playerWin = sg_scores.player > sg_scores.pet;
+            const pointsWon = 1; // Always win 1 point for playing
+
+            sg_winner.textContent = playerWin ? "You Win!" : (sg_scores.pet > sg_scores.player ? "Pet Wins!" : "It's a Draw!");
+            sg_finalScore.textContent = `Final Score: ${sg_scores.player} - ${sg_scores.pet}`;
+            sg_ppReward.style.display = 'block'; // Always show
+            
+            sg_gameOverModal.style.display = 'flex';
+            
+            // Give rewards
+            petStats.happiness = Math.min(100, petStats.happiness + (playerWin ? 25 : 10));
+            petStats.potPoints += pointsWon;
+            saveStats();
+            updateUI();
+        }
+
         // --- Initialization ---
 
-        function initializeHome() {
-            // Create pet selection buttons
-            for (const petName in petOptions) {
+        function renderPetSelection(page) {
+            petSelectionButtons.innerHTML = ''; // Clear buttons
+            const petNames = Object.keys(petOptions);
+            const totalPages = Math.ceil(petNames.length / petsPerPage);
+            currentPetPage = page;
+            
+            // Update page display
+            petPageDisplay.textContent = `Page ${page + 1} / ${totalPages}`;
+            
+            // Show/hide pagination buttons
+            prevPetPageButton.style.display = (page === 0) ? 'none' : 'block';
+            nextPetPageButton.style.display = (page + 1 >= totalPages) ? 'none' : 'block';
+            
+            // Get the slice of pets for the current page
+            const start = page * petsPerPage;
+            const end = start + petsPerPage;
+            const petsToShow = petNames.slice(start, end);
+            
+            // Create buttons
+            petsToShow.forEach(petName => {
                 const button = document.createElement('button');
                 button.className = "action-button w-full bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-6 px-4 rounded-xl shadow text-lg";
                 
@@ -1725,14 +3005,34 @@
                     selectPet(petName);
                 };
                 petSelectionButtons.appendChild(button);
-            }
+            });
+        }
+
+        function initializeHome() {
+            // Render the first page of pets
+            renderPetSelection(0);
+            
+            // Add pagination listeners
+            prevPetPageButton.addEventListener('click', () => {
+                if (currentPetPage > 0) {
+                    renderPetSelection(currentPetPage - 1);
+                }
+            });
+            nextPetPageButton.addEventListener('click', () => {
+                const totalPages = Math.ceil(Object.keys(petOptions).length / petsPerPage);
+                if (currentPetPage + 1 < totalPages) {
+                    renderPetSelection(currentPetPage + 1);
+                }
+            });
             
             // Add event listeners
             backButton.addEventListener('click', () => showScreen('home-screen'));
-            feedButton.addEventListener('click', () => showScreen('food-selection-screen'));
+            feedButton.addEventListener('click', () => showScreen('feed-menu-screen')); // NEW
             waterButton.addEventListener('click', () => showScreen('drink-selection-screen'));
-            accessoryButton.addEventListener('click', () => showScreen('accessory-shop-screen')); // NEW
+            accessoryButton.addEventListener('click', () => showScreen('accessory-shop-screen'));
+            podButton.addEventListener('click', () => showScreen('pet-pod-screen')); 
             playButton.addEventListener('click', () => showScreen('game-selection-screen'));
+            waterPlantsButton.addEventListener('click', waterPlants); // NEW
             
             // Rename listeners
             editNameButton.addEventListener('click', () => toggleNameEdit(true));
@@ -1745,13 +3045,19 @@
             playAgainButton.addEventListener('click', resetPenaltyGame);
             modalBackToGamesButton.addEventListener('click', () => {
                 penaltyGameOverModal.style.display = 'none';
-                const pointsWon = p_score > 1 ? 1 : 0; // NEW: Pot point logic
-                showScreen('game-selection-screen', p_score * 10, pointsWon);
+                const pointsWon = 1; // BUG FIX: Set points to 1
+                // BUG FIX: Pass the pointsWon as the *points* parameter
+                showScreen('game-selection-screen', p_score * 10, pointsWon); 
             });
             ball.addEventListener('mousedown', handleFlickStart, false);
             document.addEventListener('mouseup', handleFlickEnd, false);
             ball.addEventListener('touchstart', handleFlickStart, { passive: false });
             document.addEventListener('touchend', handleFlickEnd, { passive: false });
+
+            // NEW: Shell Game Listeners
+            sg_cups.forEach((cup, index) => {
+                cup.addEventListener('click', () => handlePlayerCupPick(index));
+            });
         }
 
         // --- App Start ---
