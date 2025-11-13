@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PotPetPal</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Use a playful, rounded font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@700;800&display=swap');
+        body {
+            font-family: 'Nunito', 'Inter', sans-serif;
+            /* Add a subtle gradient background */
+            background: linear-gradient(to bottom right, #f0f9ff, #e0f2fe);
+        }
+        
+        /* Custom styles for the progress bars */
+        .progress-bar {
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 2rem; /* h-8 */
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .progress-bar-inner {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.3s ease-out;
+            /* Add a nice sheen/gradient to the bars */
+            background: linear-gradient(to right, var(--bar-color-from), var(--bar-color-to));
+        }
+
+        /* Fun animation for the pet */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(-3%);
+            }
+            50% {
+                transform: translateY(0);
+            }
+        }
+        .pet-image-container {
+            animation: bounce 2s infinite ease-in-out;
+            font-size: 10rem; /* Make emoji large */
+            line-height: 1;
+            padding: 1rem;
+        }
+
+        /* Button styles with a "press" effect */
+        .action-button {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .action-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main App Container -->
+    <div class="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl border border-gray-100">
+
+        <!-- Logo -->
+        <div class="flex justify-center mb-4">
+            <!--
+                This is the logo you uploaded. 
+                It will now work because it's in the same folder.
+            -->
+            <img src="IMG_2199.JPG" alt="PotPetPal Logo" class="w-3/4" 
+                 onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block'">
+            <!-- Fallback text if the image fails to load -->
+            <h1 id="logo-fallback" class="text-3xl font-extrabold text-center text-gray-800" style="display: none;">
+                PotPetPal
+            </h1>
+        </div>
+
+        <!-- 
+          APP SCREENS
+          We will show/hide these divs using JavaScript 
+        -->
+
+        <!-- Home Screen -->
+        <div id="home-screen">
+            <h1 class="text-2xl font-extrabold text-center text-gray-800 mb-6">Welcome!</h1>
+            <p class="text-center text-gray-600 mb-6">Select a demo pet to care for.</p>
+            
+            <div id="pet-selection-buttons" class="grid grid-cols-2 gap-4">
+                <!-- Pet buttons will be inserted here by JavaScript -->
+            </div>
+            
+            <p class="text-center text-xs text-gray-400 mt-6">
+                Or tap your PotPetPal NFC tag to load your pet.
+            </p>
+        </div>
+
+        <!-- Pet Screen (Initially Hidden) -->
+        <div id="pet-screen" class="hidden">
+            
+            <!-- Back Button -->
+            <button id="back-btn" class="text-sm text-blue-600 hover:underline mb-4">&larr; Back to Home</button>
+            
+            <h1 id="pet-name-title" class="text-3xl font-extrabold text-center text-gray-800 mb-6"></h1>
+
+            <!-- Pet Image Container -->
+            <div class="flex justify-center mb-8">
+                <div id="pet-image-container" class="pet-image-container">
+                    <!-- Emoji will go here -->
+                </div>
+            </div>
+
+            <!-- Status Bars -->
+            <div class="space-y-5">
+                <!-- Food Bar -->
+                <div>
+                    <label class="text-lg font-bold text-green-700 mb-2 block">Food</label>
+                    <div class="progress-bar">
+                        <div id="food-bar-inner" class="progress-bar-inner" style="width: 50%; --bar-color-from: #4d7c0f; --bar-color-to: #a3e635;"></div>
+                    </div>
+                </div>
+
+                <!-- Water Bar -->
+                <div>
+                    <label class="text-lg font-bold text-blue-700 mb-2 block">Water</label>
+                    <div class="progress-bar">
+                        <div id="water-bar-inner" class="progress-bar-inner" style="width: 50%; --bar-color-from: #1d4ed8; --bar-color-to: #60a5fa;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-4 mt-8">
+                <button id="feed-btn" class="action-button w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg">
+                    Feed 🍔
+                </button>
+                <button id="water-btn" class="action-button w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg">
+                    Water 💧
+                </button>
+            </div>
+            
+            <!-- Status Message -->
+            <div id="message-box" class="text-center text-gray-600 font-semibold mt-6 h-6"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- App State & Data ---
+        
+        const petOptions = {
+            'Cat': { emoji: '🐱', id: 'cat' },
+            'Mouse': { emoji: '🐭', id: 'mouse' },
+            'Gorilla': { emoji: '🦍', id: 'gorilla' },
+            'Giraffe': { emoji: '🦒', id: 'giraffe' }, 
+            'Beaver': { emoji: '🦫', id: 'beaver' }
+        };
+
+        let currentPetName = null;
+        let petStats = {};
+        const defaultStats = { food: 60, water: 60, lastVisitTimestamp: Date.now() };
+        let gameLoopInterval = null;
+
+        // --- DOM Elements ---
+        const homeScreen = document.getElementById('home-screen');
+        const petScreen = document.getElementById('pet-screen');
+        const petSelectionButtons = document.getElementById('pet-selection-buttons');
+        const backButton = document.getElementById('back-btn');
+        
+        const petNameTitle = document.getElementById('pet-name-title');
+        const petImageContainer = document.getElementById('pet-image-container');
+        const foodBar = document.getElementById('food-bar-inner');
+        const waterBar = document.getElementById('water-bar-inner');
+        const feedButton = document.getElementById('feed-btn');
+        const waterButton = document.getElementById('water-btn');
+        const messageBox = document.getElementById('message-box');
+
+
+        // --- Core Functions ---
+
+        function saveStats() {
+            if (!currentPetName) return;
+            // Save stats based on the current pet's name
+            localStorage.setItem('potPetPalStats_' + currentPetName, JSON.stringify(petStats));
+        }
+
+        function loadStats(petName) {
+            // Load stats for the current pet, or use defaults
+            
+            // **** THIS IS THE BUG FIX ****
+            // The line below had a syntax error: 'as petName' is invalid.
+            // It has been corrected to use '+' for string concatenation.
+            const loadedStats = JSON.parse(localStorage.getItem('potPetPalStats_' + petName));
+            
+            if (loadedStats) {
+                petStats = loadedStats;
+            } else {
+                // First time loading this pet, set a fresh timestamp
+                petStats = { ...defaultStats, lastVisitTimestamp: Date.now() };
+            }
+
+            // --- THIS IS THE OFFLINE LOGIC ---
+            const now = Date.now();
+            const lastVisit = petStats.lastVisitTimestamp || now; // Use now as fallback
+            const secondsOffline = (now - lastVisit) / 1000;
+
+            // Only apply decay if they've been offline for more than our game loop interval
+            if (secondsOffline > 5) { 
+                // Decay rates from gameLoop (1 per 5s for food, 1.5 per 5s for water)
+                const foodDecayPerSecond = 1 / 5;
+                const waterDecayPerSecond = 1.5 / 5;
+
+                const foodDecay = secondsOffline * foodDecayPerSecond;
+                const waterDecay = secondsOffline * waterDecayPerSecond;
+
+                petStats.food = Math.max(0, Math.round(petStats.food - foodDecay));
+                petStats.water = Math.max(0, Math.round(petStats.water - waterDecay));
+                
+                // Show a message if stats changed a lot
+                if (foodDecay > 10 || waterDecay > 10) {
+                    // Use a timeout to show this *after* the pet screen is visible
+                    setTimeout(() => showMessage("I missed you!"), 100);
+                }
+            }
+
+            // 3. Update timestamp to *now* and save
+            petStats.lastVisitTimestamp = now;
+            saveStats(); // Save the new (decayed) stats
+        }
+
+        function updateUI() {
+            if (!currentPetName) return;
+            
+            // Check if petOptions has the current pet
+            if (!petOptions[currentPetName]) {
+                console.error("Selected pet name not in petOptions:", currentPetName);
+                showHomeScreen(); // Go back home if pet is invalid
+                return;
+            }
+
+            // Update pet screen details
+            petNameTitle.textContent = `My ${currentPetName}`;
+            petImageContainer.textContent = petOptions[currentPetName].emoji;
+
+            // Update the visual width of the bars
+            foodBar.style.width = petStats.food + '%';
+            waterBar.style.width = petStats.water + '%';
+            
+            // Disable buttons if pet is full
+            feedButton.disabled = petStats.food >= 100;
+            waterButton.disabled = petStats.water >= 100;
+            
+            // Style disabled buttons
+            feedButton.style.opacity = feedButton.disabled ? 0.5 : 1;
+            waterButton.style.opacity = waterButton.disabled ? 0.5 : 1;
+        }
+
+        function showMessage(text) {
+            messageBox.textContent = text;
+            setTimeout(() => {
+                if (messageBox.textContent === text) {
+                    messageBox.textContent = '';
+                }
+            }, 2000);
+        }
+
+        function feedPet() {
+            if (petStats.food >= 100) return; // Don't feed if full
+            petStats.food = Math.min(100, petStats.food + 20); // Add 20, max 100
+            showMessage("Yum, thanks!");
+            
+            // Update timestamp on interaction
+            petStats.lastVisitTimestamp = Date.now();
+            saveStats();
+            updateUI();
+        }
+
+        function giveWater() {
+            if (petStats.water >= 100) return; // Don't water if full
+            petStats.water = Math.min(100, petStats.water + 20); // Add 20, max 100
+            showMessage("Glug glug glug!");
+
+            // Update timestamp on interaction
+            petStats.lastVisitTimestamp = Date.now();
+            saveStats();
+            updateUI();
+        }
+
+        function gameLoop() {
+            // This function runs every few seconds to make the pet "live"
+            petStats.food = Math.max(0, petStats.food - 1);
+            petStats.water = Math.max(0, petStats.water - 1.5); // Pets get thirsty faster!
+            
+            // Update timestamp every loop
+            petStats.lastVisitTimestamp = Date.now();
+            
+            saveStats();
+            updateUI();
+        }
+
+// --- Screen Navigation ---
+
+        function showHomeScreen() {
+            homeScreen.classList.remove('hidden');
+            petScreen.classList.add('hidden');
+            currentPetName = null;
+            // Stop the game loop when on the home screen
+            if (gameLoopInterval) {
+                clearInterval(gameLoopInterval);
+                gameLoopInterval = null;
+            }
+        }
+
+        function selectPet(petName) {
+            currentPetName = petName;
+            loadStats(petName); // Load and calculate offline decay
+            updateUI();
+            
+            homeScreen.classList.add('hidden');
+            petScreen.classList.remove('hidden');
+
+            // Start the game loop for this pet
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(gameLoop, 5000);
+        }
+
+        // --- Initialization ---
+
+        function initializeHome() {
+            // Create pet selection buttons
+            for (const petName in petOptions) {
+                const button = document.createElement('button');
+                button.className = "action-button w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-6 px-4 rounded-xl shadow text-lg";
+                button.innerHTML = `${petOptions[petName].emoji} <br> ${petName}`;
+                button.onclick = () => selectPet(petName);
+                petSelectionButtons.appendChild(button);
+            }
+            
+            // Add event listeners for navigation
+            backButton.addEventListener('click', showHomeScreen);
+            feedButton.addEventListener('click', feedPet);
+            waterButton.addEventListener('click', giveWater);
+        }
+
+        // --- App Start ---
+        
+        window.onload = () => {
+            initializeHome();
+
+            // Check for NFC tap (via URL parameter)
+            const urlParams = new URLSearchParams(window.location.search);
+            const nfcPetId = urlParams.get('pet');
+
+            if (nfcPetId) {
+                // Find pet name that matches the ID from the URL
+                const petNameFromNfc = Object.keys(petOptions).find(
+                    name => petOptions[name].id === nfcPetId
+                );
+                
+                if (petNameFromNfc) {
+                    // NFC tap detected! Load this pet directly.
+                    selectPet(petNameFromNfc);
+                } else {
+                    // Invalid pet ID in URL, show home screen
+                    showHomeScreen();
+                }
+            } else {
+                // No NFP tap, show home screen
+                showHomeScreen();
+            }
+        };
+
+    </script>
+</body>
+</html>
