@@ -26,6 +26,20 @@
             min-height: 100dvh;
         }
         
+        /* Main container for the app */
+        .app-container {
+            background-color: #1f2937; /* bg-gray-800 */
+            width: 100%;
+            max-width: 24rem; /* max-w-sm */
+            padding: 1.5rem; /* p-6 */
+            border-radius: 1.5rem; /* rounded-3xl */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #374151; /* border-gray-700 */
+            /* Added for animation element positioning */
+            position: relative;
+            overflow: hidden; /* Hide animation emoji if it goes outside */
+        }
+        
         /* Custom styles for the progress bars */
         .progress-bar {
             background-color: #374151; /* gray-700 */
@@ -57,7 +71,35 @@
             line-height: 1;
             padding: 1rem;
             user-select: none;
+            /* Add z-index to stay above animation */
+            position: relative;
+            z-index: 10;
+            /* NEW: For accessories */
+            position: relative;
+            width: 10rem;
+            height: 10rem;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        /* NEW: Accessory Styles */
+        .pet-accessory {
+            position: absolute;
+            font-size: 5rem; /* Half the pet size */
+            z-index: 15;
+            user-select: none;
+            pointer-events: none;
+        }
+        #pet-accessory-hat {
+            top: -1.5rem; /* Position hat on top */
+        }
+        #pet-accessory-glasses {
+            top: 1.5rem; /* Position glasses over "eyes" */
+        }
+
 
         /* Button styles with a "press" effect */
         .action-button {
@@ -68,8 +110,102 @@
             transform: translateY(2px);
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Generic Screen Style */
+        .app-screen {
+            display: none; /* Hidden by default */
+            width: 100%;
+        }
+        .app-screen.active {
+            display: block; /* Shown by JS */
+        }
+        
+        /* Generic back button */
+        .back-button {
+            text-align: left;
+            font-size: 0.875rem; /* text-sm */
+            color: #f97316; /* text-orange-500 */
+            margin-bottom: 1rem; /* mb-4 */
+            cursor: pointer;
+        }
+        .back-button:hover {
+            text-decoration: underline;
+        }
+
+        /* Pot Points Display */
+        .pot-points-display {
+            background-color: #374151; /* bg-gray-700 */
+            color: #fcd34d; /* text-amber-300 */
+            font-weight: 800;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 1rem; /* text-base */
+        }
+
+        /* Food/Drink/Accessory Selection Screen */
+        .item-item {
+            background-color: #374151; /* bg-gray-700 */
+            border-radius: 1rem; /* rounded-xl */
+            padding: 1rem;
+            text-align: center;
+            border: 2px solid #4b5563; /* border-gray-600 */
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .item-item:hover {
+            border-color: #f97316; /* border-orange-500 */
+        }
+        .item-item.disabled {
+            opacity: 0.4;
+            border-color: #4b5563;
+            cursor: not-allowed;
+        }
+        /* NEW: Highlight selected accessory */
+        .item-item.selected {
+            border-color: #4ade80; /* green-400 */
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+        }
+        .item-emoji {
+            font-size: 3rem; /* text-5xl */
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        .item-price {
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 700;
+        }
+        .price-free {
+            color: #4ade80; /* text-green-400 */
+        }
+        .price-pp {
+            color: #fcd34d; /* text-amber-300 */
+        }
+
+        /* Generic Modal for all games */
+        .game-over-modal {
+            display: none; /* hidden */
+            position: absolute;
+            inset: 0;
+            background-color: rgba(17, 24, 39, 0.8); /* bg-gray-900 bg-opacity-80 */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem; /* p-4 */
+            z-index: 50;
+        }
         
         /* Game Styles */
+        .game-canvas {
+            background-color: #000;
+            border-radius: 0.5rem;
+            width: 100%;
+            max-width: 100%;
+        }
+        
         #game-area {
             background-color: #059669; /* bg-green-600 */
             background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
@@ -108,17 +244,25 @@
             height: 100px;
             border-top: 2px dashed #4b5563; /* gray-600 */
         }
-        
-        /* FIX: Ensure modal is on top */
-        #game-over-modal {
-            z-index: 50;
+
+        /* NEW Animation Emoji */
+        #action-emoji {
+            display: none;
+            position: absolute;
+            font-size: 3rem; /* text-5xl */
+            z-index: 20; /* Above buttons, below pet */
+            bottom: 10rem; /* Start near buttons */
+            left: 50%;
+            transform: translateX(-50%) scale(1);
+            transition: all 0.5s ease-in-out;
         }
+
     </style>
 </head>
 <body class="flex items-center justify-center p-4">
 
     <!-- Main App Container -->
-    <div class="bg-gray-800 w-full max-w-sm p-6 rounded-3xl shadow-2xl border border-gray-700">
+    <div class="app-container">
 
         <!-- Logo -->
         <div class="flex justify-center mb-4">
@@ -134,7 +278,7 @@
         -->
 
         <!-- Home Screen -->
-        <div id="home-screen">
+        <div id="home-screen" class="app-screen active">
             <h1 class="text-2xl font-extrabold text-center text-gray-100 mb-6">Welcome!</h1>
             <p class="text-center text-gray-400 mb-6">Select a demo pet to care for.</p>
             
@@ -147,10 +291,13 @@
             </p>
         </div>
 
-        <!-- Pet Screen (Initially Hidden) -->
-        <div id="pet-screen" class="hidden">
+        <!-- Pet Screen -->
+        <div id="pet-screen" class="app-screen">
             
-            <button id="back-btn" class="text-sm text-orange-500 hover:underline mb-4">&larr; Back to Home</button>
+            <div class="flex justify-between items-center mb-4">
+                <button id="back-btn" class="back-button">&larr; Back to Home</button>
+                <div id="pot-points-display" class="pot-points-display">0 PP</div>
+            </div>
             
             <!-- Pet Name / Rename Input -->
             <div class="flex items-center justify-center mb-6 gap-2">
@@ -163,7 +310,9 @@
             <!-- Pet Image Container -->
             <div class="flex justify-center mb-8">
                 <div id="pet-image-container" class="pet-image-container">
-                    <!-- Emoji will go here -->
+                    <div id="pet-accessory-hat" class="pet-accessory"></div>
+                    <div id="pet-accessory-glasses" class="pet-accessory"></div>
+                    <div id="pet-emoji-main"></div>
                 </div>
             </div>
 
@@ -195,12 +344,15 @@
             </div>
             
             <!-- Action Buttons -->
-            <div class="grid grid-cols-2 gap-4 mt-8">
+            <div class="grid grid-cols-3 gap-4 mt-8">
                 <button id="feed-btn" class="action-button w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg">
                     Feed 🍔
                 </button>
                 <button id="water-btn" class="action-button w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg">
                     Water 💧
+                </button>
+                <button id="accessory-btn" class="action-button w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg">
+                    Style 🧢
                 </button>
             </div>
             <button id="play-btn" class="action-button w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-4 rounded-full shadow-lg text-lg mt-4">
@@ -209,12 +361,81 @@
             
             <!-- Status Message -->
             <div id="message-box" class="text-center text-gray-400 font-semibold mt-6 h-6"></div>
+
+            <!-- NEW Animation Emoji Element -->
+            <div id="action-emoji"></div>
         </div>
         
-        <!-- Game Screen (Initially Hidden) -->
-        <div id="game-screen" class="hidden">
+        <!-- Food Selection Screen -->
+        <div id="food-selection-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
             <div class="flex justify-between items-center mb-4">
-                <button id="back-to-pet-btn" class="text-sm text-orange-500 hover:underline">&larr; Back to Pet</button>
+                <h2 class="text-2xl font-bold text-white">Food Shop</h2>
+                <div id="food-pot-points-display" class="pot-points-display">0 PP</div>
+            </div>
+            <div id="food-item-grid" class="grid grid-cols-2 gap-4">
+                <!-- Food items will be inserted here by JavaScript -->
+            </div>
+            <div id="food-message-box" class="text-center text-gray-400 font-semibold mt-4 h-6"></div>
+        </div>
+
+        <!-- NEW Drink Selection Screen -->
+        <div id="drink-selection-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Drink Shop</h2>
+                <div id="drink-pot-points-display" class="pot-points-display">0 PP</div>
+            </div>
+            <div id="drink-item-grid" class="grid grid-cols-2 gap-4">
+                <!-- Drink items will be inserted here by JavaScript -->
+            </div>
+            <div id="drink-message-box" class="text-center text-gray-400 font-semibold mt-4 h-6"></div>
+        </div>
+
+        <!-- NEW Accessory Selection Screen -->
+        <div id="accessory-shop-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Accessory Shop</h2>
+                <div id="accessory-pot-points-display" class="pot-points-display">0 PP</div>
+            </div>
+            
+            <div id="accessory-message-box" class="text-center text-gray-400 font-semibold mt-4 h-6 mb-4"></div>
+
+            <!-- Hats -->
+            <h3 class="text-xl font-bold text-orange-500 mb-2">Hats</h3>
+            <div id="hat-item-grid" class="grid grid-cols-3 gap-4 mb-6">
+                <!-- Hat items will be inserted here by JavaScript -->
+            </div>
+
+            <!-- Glasses -->
+            <h3 class="text-xl font-bold text-orange-500 mb-2">Glasses</h3>
+            <div id="glasses-item-grid" class="grid grid-cols-3 gap-4">
+                <!-- Glasses items will be inserted here by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Game Selection Screen -->
+        <div id="game-selection-screen" class="app-screen">
+            <button class="back-button" onclick="showScreen('pet-screen')">&larr; Back to Pet</button>
+            <h2 class="text-2xl font-bold text-white text-center mb-6">Game Corner</h2>
+            <div class="space-y-4">
+                <button onclick="showScreen('penalty-screen')" class="action-button w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
+                    ⚽ Penalty Shootout
+                </button>
+                <button onclick="showScreen('ping-pong-screen')" class="action-button w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
+                    🏓 Ping Pong
+                </button>
+                <button onclick="showScreen('flappy-pet-screen')" class="action-button w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-lg text-lg">
+                    🐥 Flappy Pet
+                </button>
+            </div>
+        </div>
+        
+        <!-- Penalty Game Screen -->
+        <div id="penalty-screen" class="app-screen">
+            <div class="flex justify-between items-center mb-4">
+                <button class="back-button" onclick="showScreen('game-selection-screen')">&larr; Back to Games</button>
                 <div class="text-right text-white">
                     <div id="score-display" class="text-lg font-bold">Score: 0</div>
                     <div id="shots-display" class="text-sm text-gray-400">Shots: 3</div>
@@ -239,14 +460,58 @@
             <div id="game-message" class="text-center text-orange-400 font-bold h-6 mt-4"></div>
 
             <!-- Game Over Modal -->
-            <!-- FIX: Added z-50 to ensure it's on top of other game elements -->
-            <div id="game-over-modal" class="hidden absolute inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center p-4 z-50">
+            <div id="penalty-game-over-modal" class="game-over-modal">
                 <div class="bg-gray-800 p-8 rounded-2xl shadow-lg text-center">
                     <h2 class="text-3xl font-bold text-white mb-4">Game Over!</h2>
                     <p id="final-score-message" class="text-xl text-gray-300 mb-6">You scored 0 out of 3!</p>
+                    <p id="penalty-pp-reward" class="text-xl text-amber-300 font-bold mb-6">+1 Pot Point!</p>
                     <div class="flex gap-4">
                         <button id="play-again-btn" class="action-button bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full">Play Again</button>
-                        <button id="modal-back-to-pet-btn" class="action-button bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full">Back to Pet</button>
+                        <button id="modal-back-to-games-btn" class="action-button bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full">Back to Games</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ping Pong Screen -->
+        <div id="ping-pong-screen" class="app-screen">
+            <div class="flex justify-between items-center mb-4">
+                <button class="back-button" onclick="showScreen('game-selection-screen')">&larr; Back to Games</button>
+                <div id="ping-pong-score" class="text-white text-2xl font-bold">0 - 0</div>
+            </div>
+            <canvas id="ping-pong-canvas" class="game-canvas" width="300" height="400"></canvas>
+            
+            <!-- Ping Pong Game Over Modal -->
+            <div id="ping-pong-game-over-modal" class="game-over-modal">
+                <div class="bg-gray-800 p-8 rounded-2xl shadow-lg text-center">
+                    <h2 id="ping-pong-winner" class="text-3xl font-bold text-white mb-4">You Win!</h2>
+                    <p id="ping-pong-final-score" class="text-xl text-gray-300 mb-6">Final Score: 5 - 0</p>
+                    <p id="ping-pong-pp-reward" class="text-xl text-amber-300 font-bold mb-6">+1 Pot Point!</p>
+                    <div class="flex gap-4">
+                        <button onclick="startPingPong()" class="action-button bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full">Play Again</button>
+                        <button onclick="showScreen('game-selection-screen')" class="action-button bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full">Back to Games</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Flappy Pet Screen -->
+        <div id="flappy-pet-screen" class="app-screen">
+            <div class="flex justify-between items-center mb-4">
+                <button class="back-button" onclick="showScreen('game-selection-screen')">&larr; Back to Games</button>
+                <div id="flappy-score" class="text-white text-3xl font-bold">0</div>
+            </div>
+            <canvas id="flappy-pet-canvas" class="game-canvas" width="300" height="400"></canvas>
+            
+            <!-- Flappy Pet Game Over Modal -->
+            <div id="flappy-game-over-modal" class="game-over-modal">
+                <div class="bg-gray-800 p-8 rounded-2xl shadow-lg text-center">
+                    <h2 class="text-3xl font-bold text-white mb-4">Game Over!</h2>
+                    <p id="flappy-final-score" class="text-xl text-gray-300 mb-6">Your score: 0</p>
+                    <p id="flappy-pp-reward" class="text-xl text-amber-300 font-bold mb-6">+1 Pot Point!</p>
+                    <div class="flex gap-4">
+                        <button onclick="startFlappyPet()" class="action-button bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full">Play Again</button>
+                        <button onclick="showScreen('game-selection-screen')" class="action-button bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full">Back to Games</button>
                     </div>
                 </div>
             </div>
@@ -260,31 +525,115 @@
         const petOptions = {
             'Cat': { emoji: '🐱', id: 'cat', sound: () => {
                 if (!audioInitialized) return;
-                animalSoundSynth.oscillator.type = 'triangle';
-                animalSoundSynth.triggerAttackRelease("E5", "16n", Tone.now());
-                animalSoundSynth.triggerAttackRelease("C5", "16n", Tone.now() + 0.1);
+                animalSoundSynth.oscillator.type = 'fmsine';
+                animalSoundSynth.envelope.attack = 0.05;
+                animalSoundSynth.envelope.release = 0.2;
+                animalSoundSynth.vibratoRate.value = 10;
+                animalSoundSynth.vibratoAmount.value = 0.4;
+                // Pitch bend for "meow"
+                animalSoundSynth.frequency.rampTo("E5", 0.05);
+                animalSoundSynth.frequency.rampTo("C5", 0.1);
+                animalSoundSynth.triggerAttackRelease("E5", "8n", Tone.now());
             }},
             'Mouse': { emoji: '🐭', id: 'mouse', sound: () => {
                 if (!audioInitialized) return;
                 animalSoundSynth.oscillator.type = 'sine';
-                animalSoundSynth.triggerAttackRelease("C7", "32n", Tone.now());
+                animalSoundSynth.envelope.attack = 0.001;
+                animalSoundSynth.envelope.release = 0.1;
+                animalSoundSynth.vibratoRate.value = 0;
+                animalSoundSynth.vibratoAmount.value = 0;
+                const now = Tone.now();
+                animalSoundSynth.triggerAttackRelease("C7", "32n", now);
+                animalSoundSynth.triggerAttackRelease("C7", "32n", now + 0.07);
             }},
             'Gorilla': { emoji: '🦍', id: 'gorilla', sound: () => {
                 if (!audioInitialized) return;
-                animalSoundSynth.oscillator.type = 'sawtooth';
-                animalSoundSynth.triggerAttackRelease("G2", "8n", Tone.now());
+                // Use a filter to make it "grunt"
+                const filter = new Tone.AutoFilter("4n").toDestination().start();
+                const gruntSynth = new Tone.NoiseSynth({
+                    noise: { type: 'brown' },
+                    envelope: { attack: 0.05, decay: 0.1, sustain: 0 }
+                }).connect(filter);
+                gruntSynth.triggerAttackRelease("0.1", Tone.now());
             }},
             'Giraffe': { emoji: '🦒', id: 'giraffe', sound: () => {
                 if (!audioInitialized) return;
-                animalSoundSynth.oscillator.type = 'sine';
+                // A low, rich "hum"
+                animalSoundSynth.oscillator.type = 'pwm';
+                animalSoundSynth.envelope.attack = 0.2;
+                animalSoundSynth.envelope.release = 0.5;
+                animalSoundSynth.vibratoRate.value = 2;
+                animalSoundSynth.vibratoAmount.value = 0.1;
                 animalSoundSynth.triggerAttackRelease("C3", "4n", Tone.now());
             }}, 
             'Beaver': { emoji: '🦫', id: 'beaver', sound: () => {
                 if (!audioInitialized) return;
-                animalSoundSynth.oscillator.type = 'square';
-                animalSoundSynth.triggerAttackRelease("G4", "32n", Tone.now());
-                animalSoundSynth.triggerAttackRelease("G4", "32n", Tone.now() + 0.05);
+                // Quick "chitter"
+                const noise = new Tone.NoiseSynth({
+                    noise: { type: 'pink' },
+                    envelope: { attack: 0.001, decay: 0.01, sustain: 0 }
+                }).toDestination();
+                const now = Tone.now();
+                noise.triggerAttackRelease("0.01", now);
+                noise.triggerAttackRelease("0.01", now + 0.03);
+                noise.triggerAttackRelease("0.01", now + 0.06);
+            }},
+            'Polar Bear': { emoji: '🐻‍❄️', id: 'polarbear', sound: () => {
+                if (!audioInitialized) return;
+                // Low rumble/growl
+                const filter = new Tone.Filter(80, "lowpass").toDestination();
+                const growl = new Tone.NoiseSynth({
+                    noise: { type: 'brown' },
+                    envelope: { attack: 0.1, decay: 0.5, sustain: 0.1 }
+                }).connect(filter);
+                growl.triggerAttackRelease("0.5", Tone.now());
             }}
+        };
+        
+        const foodItems = [
+            { name: 'Apple', emoji: '🍎', price: 0, value: 10 },
+            { name: 'Broccoli', emoji: '🥦', price: 0, value: 10 },
+            { name: 'Bread', emoji: '🍞', price: 0, value: 10 },
+            { name: 'Carrot', emoji: '🥕', price: 0, value: 15 },
+            { name: 'Cheese', emoji: '🧀', price: 0, value: 15 },
+            { name: 'Steak', emoji: '🥩', price: 2, value: 30 },
+            { name: 'Sushi', emoji: '🍣', price: 3, value: 35 },
+            { name: 'Donut', emoji: '🍩', price: 4, value: 40 },
+            { name: 'Cake', emoji: '🎂', price: 5, value: 50 },
+            { name: 'Magic Treat', emoji: '💎', price: 10, value: 100 }
+        ];
+
+        const drinkItems = [
+            { name: 'Water', emoji: '💧', price: 0, value: 15 },
+            { name: 'Milk', emoji: '🥛', price: 0, value: 15 },
+            { name: 'Juice', emoji: '🧃', price: 0, value: 20 },
+            { name: 'Tea', emoji: '🍵', price: 0, value: 20 },
+            { name: 'Boba', emoji: '🧋', price: 0, value: 20 },
+            { name: 'Soda', emoji: '🥤', price: 2, value: 30 },
+            { name: 'Cocktail', emoji: '🍹', price: 3, value: 35 },
+            { name: 'Wine', emoji: '🍷', price: 4, value: 40 },
+            { name: 'Champagne', emoji: '🍾', price: 5, value: 50 },
+            { name: 'Magic Potion', emoji: '🧪', price: 10, value: 100 }
+        ];
+
+        // NEW: Accessory Items
+        const accessoryItems = {
+            hats: [
+                { name: 'None', emoji: '🚫', price: 0, id: 'none' },
+                { name: 'Cap', emoji: '🧢', price: 0, id: 'cap' },
+                { name: 'Top Hat', emoji: '🎩', price: 0, id: 'tophat' },
+                { name: 'Crown', emoji: '👑', price: 3, id: 'crown' },
+                { name: 'Cowboy', emoji: '🤠', price: 3, id: 'cowboy' },
+                { name: 'Party', emoji: '🎉', price: 5, id: 'party' },
+            ],
+            glasses: [
+                { name: 'None', emoji: '🚫', price: 0, id: 'none' },
+                { name: 'Glasses', emoji: '👓', price: 0, id: 'glasses' },
+                { name: 'Shades', emoji: '🕶️', price: 2, id: 'shades' },
+                { name: 'Monocle', emoji: ' monocle_emoji: "🧐"[0]', price: 3, id: 'monocle' },
+                { name: 'Goggles', emoji: '🥽', price: 4, id: 'goggles' },
+                { name: '3D Glasses', emoji: '🕶️', price: 5, id: '3d' } // Re-using shades, just for demo
+            ]
         };
 
         let currentPetName = null;
@@ -294,91 +643,156 @@
             water: 60, 
             happiness: 60, 
             lastVisitTimestamp: Date.now(),
-            customName: null
+            customName: null,
+            potPoints: 0,
+            accessories: { hat: null, glasses: null } // NEW
         };
         let gameLoopInterval = null;
+        let pendingItem = null; // For animation
 
         // --- DOM Elements ---
         const homeScreen = document.getElementById('home-screen');
         const petScreen = document.getElementById('pet-screen');
+        const foodSelectionScreen = document.getElementById('food-selection-screen');
+        const drinkSelectionScreen = document.getElementById('drink-selection-screen');
+        const accessoryShopScreen = document.getElementById('accessory-shop-screen'); // NEW
+        const gameSelectionScreen = document.getElementById('game-selection-screen');
+        const penaltyScreen = document.getElementById('penalty-screen');
+        const pingPongScreen = document.getElementById('ping-pong-screen');
+        const flappyPetScreen = document.getElementById('flappy-pet-screen');
+        
         const petSelectionButtons = document.getElementById('pet-selection-buttons');
         const backButton = document.getElementById('back-btn');
+        const potPointsDisplay = document.getElementById('pot-points-display');
+        const foodPotPointsDisplay = document.getElementById('food-pot-points-display');
+        const drinkPotPointsDisplay = document.getElementById('drink-pot-points-display');
+        const accessoryPotPointsDisplay = document.getElementById('accessory-pot-points-display'); // NEW
         
         const petNameTitle = document.getElementById('pet-name-title');
         const petNameInput = document.getElementById('pet-name-input');
         const editNameButton = document.getElementById('edit-name-btn');
         
         const petImageContainer = document.getElementById('pet-image-container');
+        const petEmojiMain = document.getElementById('pet-emoji-main'); // NEW
+        const petAccessoryHat = document.getElementById('pet-accessory-hat'); // NEW
+        const petAccessoryGlasses = document.getElementById('pet-accessory-glasses'); // NEW
+
         const foodBar = document.getElementById('food-bar-inner');
         const waterBar = document.getElementById('water-bar-inner');
         const happinessBar = document.getElementById('happiness-bar-inner');
         
         const feedButton = document.getElementById('feed-btn');
         const waterButton = document.getElementById('water-btn');
+        const accessoryButton = document.getElementById('accessory-btn'); // NEW
         const playButton = document.getElementById('play-btn');
         const messageBox = document.getElementById('message-box');
+        const actionEmoji = document.getElementById('action-emoji');
         
-        // Game DOM Elements
-        const gameScreen = document.getElementById('game-screen');
-        const backToPetButton = document.getElementById('back-to-pet-btn');
+        // Food screen
+        const foodItemGrid = document.getElementById('food-item-grid');
+        const foodMessageBox = document.getElementById('food-message-box');
+
+        // Drink screen
+        const drinkItemGrid = document.getElementById('drink-item-grid');
+        const drinkMessageBox = document.getElementById('drink-message-box');
+
+        // Accessory screen
+        const hatItemGrid = document.getElementById('hat-item-grid'); // NEW
+        const glassesItemGrid = document.getElementById('glasses-item-grid'); // NEW
+        const accessoryMessageBox = document.getElementById('accessory-message-box'); // NEW
+        
+        // Penalty Game DOM
         const scoreDisplay = document.getElementById('score-display');
         const shotsDisplay = document.getElementById('shots-display');
         const gameMessage = document.getElementById('game-message');
         const goal = document.getElementById('goal');
         const goalkeeper = document.getElementById('goalkeeper');
         const ball = document.getElementById('ball');
-        const gameOverModal = document.getElementById('game-over-modal');
+        const penaltyGameOverModal = document.getElementById('penalty-game-over-modal');
         const finalScoreMessage = document.getElementById('final-score-message');
+        const penaltyPpReward = document.getElementById('penalty-pp-reward'); // NEW
         const playAgainButton = document.getElementById('play-again-btn');
-        const modalBackToPetButton = document.getElementById('modal-back-to-pet-btn');
+        const modalBackToGamesButton = document.getElementById('modal-back-to-games-btn');
 
-        // --- Game State ---
-        let score = 0;
-        let shotsLeft = 3;
-        let flickStartPos = null;
-        let flickStartTime = null;
-        let ballKicked = false;
+        // Penalty Game State
+        let p_score = 0;
+        let p_shotsLeft = 3;
+        let p_flickStartPos = null;
+        let p_flickStartTime = null;
+        let p_ballKicked = false;
         
+        // Ping Pong Game DOM
+        const pp_canvas = document.getElementById('ping-pong-canvas');
+        const pp_ctx = pp_canvas.getContext('2d');
+        const pp_scoreDisplay = document.getElementById('ping-pong-score');
+        const pp_gameOverModal = document.getElementById('ping-pong-game-over-modal');
+        const pp_winner = document.getElementById('ping-pong-winner');
+        const pp_finalScore = document.getElementById('ping-pong-final-score');
+        const pingPongPpReward = document.getElementById('ping-pong-pp-reward'); // NEW
+        
+        // Ping Pong Game State
+        let pp_ball, pp_player, pp_pet, pp_scores;
+        let pp_gameLoop = null;
+
+        // Flappy Pet Game DOM
+        const fp_canvas = document.getElementById('flappy-pet-canvas');
+        const fp_ctx = fp_canvas.getContext('2d');
+        const fp_scoreDisplay = document.getElementById('flappy-score');
+        const fp_gameOverModal = document.getElementById('flappy-game-over-modal');
+        const fp_finalScore = document.getElementById('flappy-final-score');
+        const flappyPpReward = document.getElementById('flappy-pp-reward'); // NEW
+        
+        // Flappy Pet Game State
+        let fp_pet, fp_gravity, fp_velocity, fp_lift, fp_pipes, fp_score, fp_gameLoop;
+        let fp_petEmoji, fp_pipeSpeed; // NEW: fp_pipeSpeed
+
         // --- Audio ---
         let audioInitialized = false;
-        let eatSynth, drinkSynth, kickSynth, goalSynth, missSynth, animalSoundSynth;
+        let eatSynth, drinkSynth, animalSoundSynth;
+        // Penalty
+        let kickSynth, goalSynth, missSynth;
+        // Ping Pong
+        let pongBlipSynth, pongScoreSynth;
+        // Flappy
+        let flapSynth, flappyScoreSynth, flappyCrashSynth;
+
 
         function initializeAudio() {
             if (audioInitialized) return;
             try {
-                // Define synths
-                eatSynth = new Tone.NoiseSynth({
-                    noise: { type: 'white' },
-                    envelope: { attack: 0.005, decay: 0.1, sustain: 0 }
-                }).toDestination();
+                // Pet
+                eatSynth = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0 } }).toDestination();
+                drinkSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination();
                 
-                drinkSynth = new Tone.Synth({
-                    oscillator: { type: 'sine' },
-                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 }
-                }).toDestination();
-                
-                kickSynth = new Tone.MembraneSynth({
-                    pitchDecay: 0.01,
-                    octaves: 2,
-                    envelope: { attack: 0.001, decay: 0.2, sustain: 0 }
-                }).toDestination();
-
-                goalSynth = new Tone.NoiseSynth({
-                    noise: { type: 'white' },
-                    envelope: { attack: 0.01, decay: 0.5, sustain: 0.1 }
-                }).toDestination();
-                
-                missSynth = new Tone.NoiseSynth({
-                    noise: { type: 'pink' },
-                    envelope: { attack: 0.01, decay: 0.3, sustain: 0 }
-                }).toDestination();
-                
-                // Synth for animal sounds
-                animalSoundSynth = new Tone.Synth({
-                    oscillator: { type: 'sine' },
+                animalSoundSynth = new Tone.MonoSynth({
+                    oscillator: { type: 'fmsine', modulationType: 'sine' },
                     envelope: { attack: 0.02, decay: 0.1, sustain: 0.2, release: 0.2 }
                 }).toDestination();
                 
+                // Penalty
+                kickSynth = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).toDestination();
+                goalSynth = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1 } }).toDestination();
+                missSynth = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0 } }).toDestination();
+                
+                // Ping Pong
+                pongBlipSynth = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0 } }).toDestination();
+                pongScoreSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0 } }).toDestination();
+                
+                // Flappy (NEW SOUNDS)
+                flapSynth = new Tone.NoiseSynth({
+                    noise: { type: 'pink' },
+                    envelope: { attack: 0.001, decay: 0.05, sustain: 0 }
+                }).toDestination();
+                flappyScoreSynth = new Tone.Synth({
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.001, decay: 0.1, sustain: 0 }
+                }).toDestination();
+                flappyCrashSynth = new Tone.MembraneSynth({ // "thud"
+                    pitchDecay: 0.1,
+                    octaves: 1,
+                    envelope: { attack: 0.01, decay: 0.3, sustain: 0 }
+                }).toDestination();
+
                 audioInitialized = true;
                 console.log("Audio Initialized");
             } catch (e) {
@@ -386,18 +800,15 @@
             }
         }
         
-        // Call Tone.start() on first user interaction
         async function startAudioContext() {
-            if (audioInitialized) return; // Already started
+            if (audioInitialized) return;
             await Tone.start();
             console.log("Audio context started!");
-            initializeAudio(); // Now create the synths
+            initializeAudio(); 
         }
         
-        // Attach to the whole document for simplicity
         document.body.addEventListener('mousedown', startAudioContext, { once: true });
         document.body.addEventListener('touchstart', startAudioContext, { once: true });
-
 
         // --- Core Functions ---
 
@@ -411,9 +822,11 @@
             
             if (loadedStats) {
                 petStats = loadedStats;
-                // Ensure new stats from updates are added
+                // Add new properties if they don't exist
                 if (petStats.happiness === undefined) petStats.happiness = 60;
                 if (petStats.customName === undefined) petStats.customName = null;
+                if (petStats.potPoints === undefined) petStats.potPoints = 0;
+                if (petStats.accessories === undefined) petStats.accessories = { hat: null, glasses: null }; // NEW
             } else {
                 petStats = { ...defaultStats, lastVisitTimestamp: Date.now() };
             }
@@ -426,7 +839,7 @@
             if (secondsOffline > 5) { 
                 const foodDecay = (secondsOffline / 5) * 1;
                 const waterDecay = (secondsOffline / 5) * 1.5;
-                const happinessDecay = (secondsOffline / 5) * 2; // Happiness decays fastest
+                const happinessDecay = (secondsOffline / 5) * 2; 
 
                 petStats.food = Math.max(0, Math.round(petStats.food - foodDecay));
                 petStats.water = Math.max(0, Math.round(petStats.water - waterDecay));
@@ -441,16 +854,15 @@
             saveStats();
         }
 
-        function updateUI() {
+        function updateUI(fullUpdate = false) {
             if (!currentPetName) return;
             if (!petOptions[currentPetName]) {
                 console.error("Selected pet name not in petOptions:", currentPetName);
-                showHomeScreen();
+                showScreen('home-screen');
                 return;
             }
             
             // --- Name Update Logic ---
-            // FIX: Check if input is hidden. If not, user is editing.
             if (petNameInput.classList.contains('hidden')) {
                 if (petStats.customName) {
                     petNameTitle.textContent = petStats.customName;
@@ -462,22 +874,44 @@
             }
             
             // Update pet image
-            petImageContainer.textContent = petOptions[currentPetName].emoji;
+            petEmojiMain.textContent = petOptions[currentPetName].emoji;
             goalkeeper.textContent = petOptions[currentPetName].emoji;
+            fp_petEmoji = petOptions[currentPetName].emoji;
+
+            // NEW: Update accessories
+            petAccessoryHat.textContent = petStats.accessories.hat ? accessoryItems.hats.find(h => h.id === petStats.accessories.hat)?.emoji || '' : '';
+            petAccessoryGlasses.textContent = petStats.accessories.glasses ? accessoryItems.glasses.find(g => g.id === petStats.accessories.glasses)?.emoji || '' : '';
+            // Fix monocle
+            if (petStats.accessories.glasses === 'monocle') {
+                petAccessoryGlasses.textContent = '🧐'; // Special case for monocle
+            }
 
             // Update bars
             foodBar.style.width = petStats.food + '%';
             waterBar.style.width = petStats.water + '%';
             happinessBar.style.width = petStats.happiness + '%';
             
+            // Update Pot Points
+            potPointsDisplay.textContent = `${petStats.potPoints} PP`;
+            foodPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
+            drinkPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
+            accessoryPotPointsDisplay.textContent = `${petStats.potPoints} PP`; // NEW
+            
             // Disable buttons if full
-            feedButton.disabled = petStats.food >= 100;
             waterButton.disabled = petStats.water >= 100;
+            feedButton.disabled = petStats.food >= 100;
             playButton.disabled = petStats.happiness >= 100;
             
-            feedButton.style.opacity = feedButton.disabled ? 0.5 : 1;
             waterButton.style.opacity = waterButton.disabled ? 0.5 : 1;
+            feedButton.style.opacity = feedButton.disabled ? 0.5 : 1;
             playButton.style.opacity = playButton.disabled ? 0.5 : 1;
+            
+            if (fullUpdate) {
+                // Update all menu button states
+                updateFoodMenu();
+                updateDrinkMenu();
+                updateAccessoryMenu(); // NEW
+            }
         }
 
         function showMessage(text, isGood = true) {
@@ -489,35 +923,72 @@
                 }
             }, 2000);
         }
-
-        function feedPet() {
-            if (petStats.food >= 100) return;
-            petStats.food = Math.min(100, petStats.food + 20);
-            if (audioInitialized) eatSynth.triggerAttackRelease("0.1");
-            showMessage("Yum, thanks!");
-            petStats.lastVisitTimestamp = Date.now();
-            saveStats();
-            updateUI();
+        
+        function showFoodMessage(text, isGood = true) {
+            foodMessageBox.textContent = text;
+            foodMessageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-4 h-6' : 'text-center text-red-400 font-semibold mt-4 h-6';
+            setTimeout(() => {
+                if (foodMessageBox.textContent === text) {
+                    foodMessageBox.textContent = '';
+                }
+            }, 2000);
         }
 
-        function giveWater() {
-            if (petStats.water >= 100) return;
-            petStats.water = Math.min(100, petStats.water + 20);
-            // Play a "glug" sound
+        function showDrinkMessage(text, isGood = true) {
+            drinkMessageBox.textContent = text;
+            drinkMessageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-4 h-6' : 'text-center text-red-400 font-semibold mt-4 h-6';
+            setTimeout(() => {
+                if (drinkMessageBox.textContent === text) {
+                    drinkMessageBox.textContent = '';
+                }
+            }, 2000);
+        }
+
+        // NEW: Accessory Message
+        function showAccessoryMessage(text, isGood = true) {
+            accessoryMessageBox.textContent = text;
+            accessoryMessageBox.className = isGood ? 'text-center text-green-400 font-semibold mt-4 h-6 mb-4' : 'text-center text-red-400 font-semibold mt-4 h-6 mb-4';
+            setTimeout(() => {
+                if (accessoryMessageBox.textContent === text) {
+                    accessoryMessageBox.textContent = '';
+                }
+            }, 2000);
+        }
+
+        function feedPet(foodValue) {
+            if (petStats.food >= 100) return;
+            petStats.food = Math.min(100, petStats.food + foodValue);
             if (audioInitialized) {
-                drinkSynth.triggerAttackRelease("G2", "8n", Tone.now());
-                drinkSynth.triggerAttackRelease("E2", "8n", Tone.now() + 0.1);
+                const now = Tone.now();
+                eatSynth.triggerAttackRelease("0.05", now);
+                eatSynth.triggerAttackRelease("0.05", now + 0.12);
+                eatSynth.triggerAttackRelease("0.05", now + 0.24);
             }
-            showMessage("Glug glug glug!");
+            showMessage("Yum, thanks!"); // Show message on pet screen
             petStats.lastVisitTimestamp = Date.now();
             saveStats();
-            updateUI();
+            updateUI(true); // fullUpdate to refresh food menu
+        }
+
+        function giveWater(waterValue) {
+            if (petStats.water >= 100) return;
+            petStats.water = Math.min(100, petStats.water + waterValue);
+            if (audioInitialized) {
+                const now = Tone.now();
+                drinkSynth.triggerAttackRelease("G3", "16n", now);
+                drinkSynth.triggerAttackRelease("E3", "16n", now + 0.1);
+                drinkSynth.triggerAttackRelease("C3", "16n", now + 0.2);
+            }
+            showMessage("Glug glug glug!"); // Show message on pet screen
+            petStats.lastVisitTimestamp = Date.now();
+            saveStats();
+            updateUI(true); // fullUpdate to refresh drink menu
         }
 
         function gameLoop() {
             petStats.food = Math.max(0, petStats.food - 1);
             petStats.water = Math.max(0, petStats.water - 1.5);
-            petStats.happiness = Math.max(0, petStats.happiness - 2); // Happiness decays
+            petStats.happiness = Math.max(0, petStats.happiness - 2);
             
             petStats.lastVisitTimestamp = Date.now();
             saveStats();
@@ -527,7 +998,6 @@
         // --- Pet Rename Logic ---
         function toggleNameEdit(isEditing) {
             if (isEditing) {
-                // FIX: Pause game loop while editing
                 if (gameLoopInterval) {
                     clearInterval(gameLoopInterval);
                     gameLoopInterval = null;
@@ -549,143 +1019,360 @@
                 petStats.customName = newName;
                 petNameTitle.textContent = newName;
                 saveStats();
+                
+                const buttonToUpdate = document.querySelector(`#pet-selection-buttons button[data-petname="${currentPetName}"]`);
+                if (buttonToUpdate) {
+                    buttonToUpdate.innerHTML = `${petOptions[currentPetName].emoji} <br> ${petStats.customName}`;
+                }
             }
             toggleNameEdit(false);
-            
-            // FIX: Restart game loop after saving
-            if (!gameLoopInterval) {
-                gameLoopInterval = setInterval(gameLoop, 5000);
-            }
-        }
-
-        // --- Screen Navigation ---
-
-        function showHomeScreen() {
-            homeScreen.classList.remove('hidden');
-            petScreen.classList.add('hidden');
-            gameScreen.classList.add('hidden');
-            currentPetName = null;
-            if (gameLoopInterval) {
-                clearInterval(gameLoopInterval);
-                gameLoopInterval = null;
-            }
-        }
-
-        function showPetScreen(reward = 0) {
-            homeScreen.classList.add('hidden');
-            petScreen.classList.remove('hidden');
-            gameScreen.classList.add('hidden');
-            gameOverModal.classList.add('hidden');
-
-            if (reward > 0) {
-                petStats.happiness = Math.min(100, petStats.happiness + reward * 10);
-                showMessage(`So fun! +${reward * 10} Happiness!`);
-            } else if (reward < 0) {
-                 showMessage("Aww, maybe next time!", false);
-            }
-            
-            petStats.lastVisitTimestamp = Date.now();
-            saveStats();
-            updateUI();
             
             if (!gameLoopInterval) {
                 gameLoopInterval = setInterval(gameLoop, 5000);
             }
         }
         
-        function showGameScreen() {
-            homeScreen.classList.add('hidden');
-            petScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            gameOverModal.classList.add('hidden');
+        // --- Food Selection Logic ---
+        function updateFoodMenu() {
+            foodItemGrid.innerHTML = ''; // Clear old grid
+            foodPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
             
-            if (gameLoopInterval) {
-                clearInterval(gameLoopInterval);
-                gameLoopInterval = null;
+            foodItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                const canAfford = petStats.potPoints >= item.price;
+                const isFull = petStats.food >= 100;
+                
+                itemDiv.className = 'item-item';
+                itemDiv.innerHTML = `
+                    <div class="item-emoji">${item.emoji}</div>
+                    <div class="text-white font-bold">${item.name}</div>
+                    <div class="item-price ${item.price === 0 ? 'price-free' : 'price-pp'}">
+                        ${item.price === 0 ? 'FREE' : `${item.price} PP`}
+                    </div>
+                `;
+                
+                if (!canAfford || (isFull && item.value > 0)) {
+                    itemDiv.classList.add('disabled');
+                } else {
+                    itemDiv.onclick = () => buyFood(item);
+                }
+                foodItemGrid.appendChild(itemDiv);
+            });
+        }
+        
+        function buyFood(item) {
+            if (petStats.food >= 100) {
+                showFoodMessage("I'm too full!", false);
+                return;
             }
-            resetGame();
+            if (petStats.potPoints < item.price) {
+                showFoodMessage("Not enough points!", false);
+                return;
+            }
+            
+            petStats.potPoints -= item.price;
+            pendingItem = item; // Set item for animation
+            showScreen('pet-screen'); // Go back to pet screen
+        }
+
+        // --- Drink Selection Logic ---
+        function updateDrinkMenu() {
+            drinkItemGrid.innerHTML = '';
+            drinkPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
+            
+            drinkItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                const canAfford = petStats.potPoints >= item.price;
+                const isFull = petStats.water >= 100;
+                
+                itemDiv.className = 'item-item';
+                itemDiv.innerHTML = `
+                    <div class="item-emoji">${item.emoji}</div>
+                    <div class="text-white font-bold">${item.name}</div>
+                    <div class="item-price ${item.price === 0 ? 'price-free' : 'price-pp'}">
+                        ${item.price === 0 ? 'FREE' : `${item.price} PP`}
+                    </div>
+                `;
+                
+                if (!canAfford || (isFull && item.value > 0)) {
+                    itemDiv.classList.add('disabled');
+                } else {
+                    itemDiv.onclick = () => buyDrink(item);
+                }
+                drinkItemGrid.appendChild(itemDiv);
+            });
+        }
+
+        function buyDrink(item) {
+            if (petStats.water >= 100) {
+                showDrinkMessage("I'm not thirsty!", false);
+                return;
+            }
+            if (petStats.potPoints < item.price) {
+                showDrinkMessage("Not enough points!", false);
+                return;
+            }
+            
+            petStats.potPoints -= item.price;
+            // Tag as a drink item for the animation function
+            pendingItem = { ...item, isDrink: true }; 
+            showScreen('pet-screen');
+        }
+
+        // --- NEW Accessory Selection Logic ---
+        function updateAccessoryMenu() {
+            hatItemGrid.innerHTML = '';
+            glassesItemGrid.innerHTML = '';
+            accessoryPotPointsDisplay.textContent = `${petStats.potPoints} PP`;
+            
+            // Populate Hats
+            accessoryItems.hats.forEach(item => {
+                const itemDiv = createAccessoryButton(item, 'hat');
+                hatItemGrid.appendChild(itemDiv);
+            });
+            
+            // Populate Glasses
+            accessoryItems.glasses.forEach(item => {
+                const itemDiv = createAccessoryButton(item, 'glasses');
+                glassesItemGrid.appendChild(itemDiv);
+            });
+        }
+
+        function createAccessoryButton(item, category) {
+            const itemDiv = document.createElement('div');
+            const canAfford = petStats.potPoints >= item.price;
+            const isEquipped = petStats.accessories[category] === item.id;
+            
+            itemDiv.className = 'item-item';
+            if (isEquipped) itemDiv.classList.add('selected');
+            
+            let emoji = item.emoji;
+            if (item.id === 'monocle') emoji = '🧐'; // Special case
+
+            itemDiv.innerHTML = `
+                <div class="item-emoji">${emoji}</div>
+                <div class="text-white font-bold text-xs">${item.name}</div>
+                <div class="item-price ${item.price === 0 ? 'price-free' : 'price-pp'}">
+                    ${item.price === 0 ? 'FREE' : `${item.price} PP`}
+                </div>
+            `;
+            
+            if (!canAfford) {
+                itemDiv.classList.add('disabled');
+            } else {
+                itemDiv.onclick = () => buyAccessory(item, category);
+            }
+            return itemDiv;
+        }
+
+        function buyAccessory(item, category) {
+            if (petStats.potPoints < item.price) {
+                showAccessoryMessage("Not enough points!", false);
+                return;
+            }
+            
+            if (petStats.accessories[category] === item.id) {
+                // Already have it, unequip
+                petStats.accessories[category] = null;
+                showAccessoryMessage(`${item.name} unequipped!`, true);
+            } else {
+                // Buy and equip
+                petStats.potPoints -= item.price;
+                petStats.accessories[category] = item.id;
+                showAccessoryMessage(`${item.name} equipped!`, true);
+            }
+            
+            saveStats();
+            updateAccessoryMenu(); // Refresh menu
+            updateUI(); // Refresh pet screen (though it's not visible)
+        }
+
+        // --- Animation Function ---
+        function animatePetAction(item) {
+            actionEmoji.textContent = item.emoji;
+            actionEmoji.style.display = 'block';
+            actionEmoji.style.opacity = '1';
+            actionEmoji.style.transition = 'none'; // Reset
+            actionEmoji.style.transform = 'translate(-50%, 0) scale(1)'; // Start pos
+            
+            // Force reflow to apply start state
+            void actionEmoji.offsetWidth; 
+            
+            // Apply end state (triggers transition)
+            actionEmoji.style.transition = 'all 0.5s ease-in-out';
+            actionEmoji.style.transform = 'translate(-50%, -150px) scale(0.5)';
+            actionEmoji.style.opacity = '0';
+            
+            setTimeout(() => {
+                if (item.isDrink) { // It's a drink
+                    giveWater(item.value);
+                } else { // It's food
+                    feedPet(item.value);
+                }
+                
+                // Reset for next time
+                actionEmoji.style.display = 'none';
+                
+            }, 500); // Match CSS transition duration
+        }
+
+        // --- Screen Navigation ---
+        function showScreen(screenId, reward = 0, points = 0) {
+            // Stop any active game loops
+            if (pp_gameLoop) cancelAnimationFrame(pp_gameLoop);
+            if (fp_gameLoop) cancelAnimationFrame(fp_gameLoop);
+            
+            // Hide all screens
+            document.querySelectorAll('.app-screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Add rewards if returning to pet screen
+            if (screenId === 'pet-screen') {
+                if (reward > 0) {
+                    petStats.happiness = Math.min(100, petStats.happiness + reward);
+                    showMessage(`So fun! +${reward} Happiness!`);
+                }
+                if (points > 0) {
+                    petStats.potPoints += points;
+                    showMessage(`+${points} Pot Point!`);
+                }
+
+                // Check for pending item animation
+                if (pendingItem) {
+                    animatePetAction(pendingItem);
+                    pendingItem = null; // Clear it
+                }
+                
+                petStats.lastVisitTimestamp = Date.now();
+                saveStats();
+                updateUI(true); // fullUpdate = true
+            
+                if (!gameLoopInterval) {
+                    gameLoopInterval = setInterval(gameLoop, 5000);
+                }
+            } else if (screenId === 'home-screen') {
+                currentPetName = null;
+                if (gameLoopInterval) {
+                    clearInterval(gameLoopInterval);
+                    gameLoopInterval = null;
+                }
+            } else {
+                // Pause pet loop when not on pet screen
+                if (gameLoopInterval) {
+                    clearInterval(gameLoopInterval);
+                    gameLoopInterval = null;
+                }
+                
+                // Specific init functions for screens
+                if (screenId === 'food-selection-screen') {
+                    updateFoodMenu();
+                }
+                if (screenId === 'drink-selection-screen') {
+                    updateDrinkMenu();
+                }
+                if (screenId === 'accessory-shop-screen') { // NEW
+                    updateAccessoryMenu();
+                }
+                if (screenId === 'penalty-screen') {
+                    resetPenaltyGame();
+                }
+                if (screenId === 'ping-pong-screen') {
+                    startPingPong();
+                }
+                if (screenId === 'flappy-pet-screen') {
+                    startFlappyPet();
+                }
+            }
+            
+            // Show the target screen
+            document.getElementById(screenId).classList.add('active');
         }
         
         function selectPet(petName) {
             currentPetName = petName;
             loadStats(petName);
-            showPetScreen();
+            showScreen('pet-screen');
         }
 
-        // --- Game Logic ---
-        function resetGame() {
-            score = 0;
-            shotsLeft = 3;
-            updateGameUI();
+        // --- Penalty Game Logic ---
+        function resetPenaltyGame() {
+            p_score = 0;
+            p_shotsLeft = 3;
+            updatePenaltyGameUI();
             resetBall();
-            gameOverModal.classList.add('hidden');
+            penaltyGameOverModal.style.display = 'none';
             gameMessage.textContent = "Flick the ball to shoot!";
         }
         
         function resetBall() {
-            ballKicked = false;
+            p_ballKicked = false;
             ball.style.transform = "translate(0, 0)";
             ball.style.opacity = 1;
             goalkeeper.style.transform = "translateX(0)";
-            gameMessage.textContent = shotsLeft > 0 ? "Flick the ball to shoot!" : "";
+            gameMessage.textContent = p_shotsLeft > 0 ? "Flick the ball to shoot!" : "";
         }
         
-        function updateGameUI() {
-            scoreDisplay.textContent = `Score: ${score}`;
-            shotsDisplay.textContent = `Shots: ${shotsLeft}`;
+        function updatePenaltyGameUI() {
+            scoreDisplay.textContent = `Score: ${p_score}`;
+            shotsDisplay.textContent = `Shots: ${p_shotsLeft}`;
         }
         
-        function showGameOver() {
-            finalScoreMessage.textContent = `You scored ${score} out of 3!`;
-            gameOverModal.classList.remove('hidden');
+        function showPenaltyGameOver() {
+            finalScoreMessage.textContent = `You scored ${p_score} out of 3!`;
+            // NEW: Conditional Pot Point display
+            const pointsWon = p_score > 1 ? 1 : 0;
+            if (pointsWon > 0) {
+                penaltyPpReward.textContent = "+1 Pot Point!";
+                penaltyPpReward.style.display = 'block';
+            } else {
+                penaltyPpReward.style.display = 'none';
+            }
+            penaltyGameOverModal.style.display = 'flex';
         }
         
         function handleFlickStart(e) {
-            if (ballKicked) return;
+            if (p_ballKicked) return;
             e.preventDefault();
-            flickStartPos = getEventPos(e);
-            flickStartTime = Date.now();
+            p_flickStartPos = getEventPos(e);
+            p_flickStartTime = Date.now();
         }
 
         function handleFlickEnd(e) {
-            if (ballKicked || !flickStartPos) return;
+            if (p_ballKicked || !p_flickStartPos) return;
             e.preventDefault();
             
             const flickEndPos = getEventPos(e);
             const flickEndTime = Date.now();
             
-            const deltaX = flickEndPos.x - flickStartPos.x;
-            const deltaY = flickEndPos.y - flickStartPos.y;
-            const deltaTime = flickEndTime - flickStartTime;
+            const deltaX = flickEndPos.x - p_flickStartPos.x;
+            const deltaY = flickEndPos.y - p_flickStartPos.y;
+            const deltaTime = flickEndTime - p_flickStartTime;
             
-            flickStartPos = null; // Reset for next flick
+            p_flickStartPos = null; // Reset for next flick
 
             if (deltaY > 0 || deltaTime < 50) return; // Must be upward flick and fast enough
 
-            ballKicked = true;
+            p_ballKicked = true;
             if (audioInitialized) kickSynth.triggerAttackRelease("G2", "32n");
-            shotsLeft--;
+            p_shotsLeft--;
             gameMessage.textContent = "";
-            updateGameUI();
+            updatePenaltyGameUI();
             
-            // Calculate flick "power"
-            const velocityY = Math.abs(deltaY / deltaTime); // Speed of flick
+            const velocityY = Math.abs(deltaY / deltaTime);
             const velocityX = deltaX / deltaTime;
             
-            // --- 1. Goalkeeper AI ---
             const goalWidth = goal.clientWidth;
-            const keeperDive = (Math.random() - 0.5) * goalWidth * 0.8; // Dive left or right
+            const keeperDive = (Math.random() - 0.5) * goalWidth * 0.8;
             goalkeeper.style.transform = `translateX(${keeperDive}px)`;
             
-            // --- 2. Ball Physics ---
-            let targetX = velocityX * 100; // How far left/right
-            let targetY = -250 - (velocityY * 50); // How far up
+            let targetX = velocityX * 100;
+            let targetY = -250 - (velocityY * 50);
             targetX = Math.max(-150, Math.min(150, targetX));
             
             ball.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.8)`;
-            ball.style.opacity = 0; // Fade out as it flies
+            ball.style.opacity = 0;
 
-            // --- 3. Check Result ---
             setTimeout(() => {
                 const goalRect = goal.getBoundingClientRect();
                 const keeperRect = goalkeeper.getBoundingClientRect();
@@ -697,7 +1384,7 @@
                 } 
                 else if (ballFinalX > goalRect.left && ballFinalX < goalRect.right) {
                     gameMessage.textContent = "GOAL!";
-                    score++;
+                    p_score++;
                     if (audioInitialized) goalSynth.triggerAttackRelease("0.5");
                 } 
                 else {
@@ -705,31 +1392,306 @@
                     if (audioInitialized) missSynth.triggerAttackRelease("0.3");
                 }
                 
-                updateGameUI();
+                updatePenaltyGameUI();
                 
-                // --- 4. Next Step ---
                 setTimeout(() => {
-                    if (shotsLeft > 0) {
+                    if (p_shotsLeft > 0) {
                         resetBall();
                     } else {
-                        showGameOver();
+                        // Game Over
+                        showPenaltyGameOver();
                     }
-                }, 1500); // Wait 1.5s to show message
-            }, 500); // 0.5s ball flight time
+                }, 1500); 
+            }, 500);
         }
         
         function getEventPos(e) {
-            // FIX: This now correctly handles touchstart, touchend, and mouse events
-            // For 'touchend' event
             if (e.changedTouches && e.changedTouches.length > 0) {
                 return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
             }
-            // For 'touchstart' or 'touchmove' event
             if (e.touches && e.touches.length > 0) {
                 return { x: e.touches[0].clientX, y: e.touches[0].clientY };
             }
-            // Fallback for mouse events (clientX/Y are fine)
             return { x: e.clientX, y: e.clientY };
+        }
+        
+        // --- Ping Pong Logic ---
+        function startPingPong() {
+            if (pp_gameLoop) cancelAnimationFrame(pp_gameLoop);
+            pp_gameOverModal.style.display = 'none';
+
+            pp_ball = { x: pp_canvas.width / 2, y: pp_canvas.height / 2, r: 8, dx: 2, dy: 2 };
+            pp_player = { x: 10, y: pp_canvas.height / 2 - 40, w: 10, h: 80 };
+            pp_pet = { x: pp_canvas.width - 20, y: pp_canvas.height / 2 - 40, w: 10, h: 80 };
+            pp_scores = { player: 0, pet: 0 };
+            updatePingPongScore();
+            
+            pp_canvas.addEventListener('mousemove', movePlayerPaddle);
+            pp_canvas.addEventListener('touchmove', movePlayerPaddle, { passive: true });
+            
+            pp_gameLoop = requestAnimationFrame(drawPingPong);
+        }
+        
+        function movePlayerPaddle(e) {
+            let y;
+            if (e.touches) {
+                y = e.touches[0].clientY - pp_canvas.getBoundingClientRect().top;
+            } else {
+                y = e.clientY - pp_canvas.getBoundingClientRect().top;
+            }
+            pp_player.y = y - pp_player.h / 2;
+            pp_player.y = Math.max(0, Math.min(pp_canvas.height - pp_player.h, pp_player.y));
+        }
+
+        function drawPingPong() {
+            pp_ctx.fillStyle = '#111827'; // Black
+            pp_ctx.fillRect(0, 0, pp_canvas.width, pp_canvas.height);
+            
+            // Center line
+            pp_ctx.fillStyle = '#4b5563'; // Gray
+            pp_ctx.fillRect(pp_canvas.width / 2 - 1, 0, 2, pp_canvas.height);
+            
+            // Ball
+            pp_ctx.fillStyle = '#f97316'; // Orange
+            pp_ctx.beginPath();
+            pp_ctx.arc(pp_ball.x, pp_ball.y, pp_ball.r, 0, Math.PI * 2);
+            pp_ctx.fill();
+            
+            // Player Paddle
+            pp_ctx.fillStyle = 'white';
+            pp_ctx.fillRect(pp_player.x, pp_player.y, pp_player.w, pp_player.h);
+            
+            // Pet Paddle (Emoji)
+            pp_ctx.font = '30px Nunito';
+            pp_ctx.textAlign = 'center';
+            pp_ctx.textBaseline = 'middle';
+            pp_ctx.fillText(petOptions[currentPetName].emoji, pp_pet.x + pp_pet.w / 2, pp_pet.y + pp_pet.h / 2);
+
+            updatePingPong();
+            
+            pp_gameLoop = requestAnimationFrame(drawPingPong);
+        }
+
+        function updatePingPong() {
+            // Move ball
+            pp_ball.x += pp_ball.dx;
+            pp_ball.y += pp_ball.dy;
+
+            // Wall collision (top/bottom)
+            if (pp_ball.y + pp_ball.r > pp_canvas.height || pp_ball.y - pp_ball.r < 0) {
+                pp_ball.dy *= -1;
+                if (audioInitialized) pongBlipSynth.triggerAttackRelease("C4", "32n");
+            }
+
+            // Paddle collision
+            if (pp_ball.x - pp_ball.r < pp_player.x + pp_player.w && pp_ball.y > pp_player.y && pp_ball.y < pp_player.y + pp_player.h) {
+                pp_ball.dx *= -1;
+                if (audioInitialized) pongBlipSynth.triggerAttackRelease("E4", "32n");
+            }
+            if (pp_ball.x + pp_ball.r > pp_pet.x && pp_ball.y > pp_pet.y && pp_ball.y < pp_pet.y + pp_pet.h) {
+                pp_ball.dx *= -1;
+                if (audioInitialized) pongBlipSynth.triggerAttackRelease("G4", "32n");
+            }
+
+            // Pet AI
+            pp_pet.y += (pp_ball.y - (pp_pet.y + pp_pet.h / 2)) * 0.08; // Eased tracking
+            pp_pet.y = Math.max(0, Math.min(pp_canvas.height - pp_pet.h, pp_pet.y));
+            
+            // Score
+            if (pp_ball.x + pp_ball.r < 0) {
+                pp_scores.pet++;
+                if (audioInitialized) pongScoreSynth.triggerAttackRelease("G5", "16n");
+                resetPingPongBall();
+            } else if (pp_ball.x - pp_ball.r > pp_canvas.width) {
+                pp_scores.player++;
+                if (audioInitialized) pongScoreSynth.triggerAttackRelease("C5", "16n");
+                resetPingPongBall();
+            }
+
+            if (pp_scores.player === 5 || pp_scores.pet === 5) {
+                endPingPong();
+            }
+        }
+        
+        function resetPingPongBall() {
+            pp_ball.x = pp_canvas.width / 2;
+            pp_ball.y = pp_canvas.height / 2;
+            pp_ball.dx *= (Math.random() > 0.5 ? 1 : -1); // Randomize serve direction
+            pp_ball.dy = (Math.random() * 4) - 2; // Randomize serve angle
+            updatePingPongScore();
+        }
+
+        function updatePingPongScore() {
+            pp_scoreDisplay.textContent = `${pp_scores.player} - ${pp_scores.pet}`;
+        }
+        
+        function endPingPong() {
+            cancelAnimationFrame(pp_gameLoop);
+            pp_gameLoop = null;
+            
+            const playerWin = pp_scores.player === 5;
+            const pointsWon = playerWin ? 1 : 0; // NEW: Pot point logic
+            
+            pp_winner.textContent = playerWin ? "You Win!" : "Pet Wins!";
+            pp_finalScore.textContent = `Final Score: ${pp_scores.player} - ${pp_scores.pet}`;
+            
+            if (pointsWon > 0) {
+                pingPongPpReward.textContent = "+1 Pot Point!";
+                pingPongPpReward.style.display = 'block';
+            } else {
+                pingPongPpReward.style.display = 'none';
+            }
+            
+            pp_gameOverModal.style.display = 'flex';
+            
+            // Give rewards
+            petStats.happiness = Math.min(100, petStats.happiness + (playerWin ? 25 : 5));
+            petStats.potPoints += pointsWon;
+            saveStats();
+            updateUI();
+        }
+
+        // --- Flappy Pet Logic ---
+        function startFlappyPet() {
+            if (fp_gameLoop) cancelAnimationFrame(fp_gameLoop);
+            fp_gameOverModal.style.display = 'none';
+
+            fp_pet = { x: 50, y: 150, r: 15 };
+            fp_gravity = 0.4;
+            fp_velocity = 0;
+            fp_lift = -8;
+            fp_pipes = [];
+            fp_score = 0;
+            fp_pipeSpeed = 3; // NEW: Difficulty speed
+            fp_scoreDisplay.textContent = '0';
+            
+            fp_pipes.push({ x: fp_canvas.width, w: 40, top: 0, bottom: Math.random() * (fp_canvas.height / 2) + 50 });
+            
+            fp_canvas.addEventListener('mousedown', flappyFlap);
+            fp_canvas.addEventListener('touchstart', flappyFlap, { passive: false });
+            
+            fp_gameLoop = requestAnimationFrame(drawFlappyPet);
+        }
+
+        function flappyFlap(e) {
+            e.preventDefault();
+            fp_velocity = fp_lift;
+            if (audioInitialized) {
+                // NEW: Nicer flap sound
+                flapSynth.envelope.attack = 0.001;
+                flapSynth.envelope.decay = 0.05;
+                flapSynth.triggerAttackRelease("0.05");
+            }
+        }
+
+        function drawFlappyPet() {
+            fp_ctx.fillStyle = '#111827';
+            fp_ctx.fillRect(0, 0, fp_canvas.width, fp_canvas.height);
+            
+            // Draw Pet
+            fp_ctx.font = '30px Nunito';
+            fp_ctx.textAlign = 'center';
+            fp_ctx.textBaseline = 'middle';
+            fp_ctx.fillText(fp_petEmoji, fp_pet.x, fp_pet.y);
+            
+            // Draw Pipes
+            for (let i = 0; i < fp_pipes.length; i++) {
+                const pipe = fp_pipes[i];
+                const pipeGap = 120;
+                
+                fp_ctx.fillStyle = '#059669'; // Green
+                
+                // Top pipe
+                fp_ctx.fillRect(pipe.x, 0, pipe.w, pipe.bottom);
+                // Bottom pipe
+                fp_ctx.fillRect(pipe.x, pipe.bottom + pipeGap, pipe.w, fp_canvas.height);
+            }
+            
+            updateFlappyPet();
+            fp_gameLoop = requestAnimationFrame(drawFlappyPet);
+        }
+
+        function updateFlappyPet() {
+            fp_velocity += fp_gravity;
+            fp_pet.y += fp_velocity;
+            
+            // NEW: Increase speed over time
+            fp_pipeSpeed += 0.001;
+
+            // Ground collision
+            if (fp_pet.y + fp_pet.r > fp_canvas.height || fp_pet.y - fp_pet.r < 0) {
+                endFlappyPet();
+                return;
+            }
+
+            // Move pipes
+            for (let i = fp_pipes.length - 1; i >= 0; i--) {
+                const pipe = fp_pipes[i];
+                pipe.x -= fp_pipeSpeed; // Use variable speed
+
+                // Collision
+                const pipeGap = 120;
+                if (fp_pet.x + fp_pet.r > pipe.x && fp_pet.x - fp_pet.r < pipe.x + pipe.w) {
+                    if (fp_pet.y - fp_pet.r < pipe.bottom || fp_pet.y + fp_pet.r > pipe.bottom + pipeGap) {
+                        endFlappyPet();
+                        return;
+                    }
+                }
+
+                // Score
+                if (pipe.x < fp_pet.x - pipe.w - fp_pipeSpeed && !pipe.passed) {
+                    pipe.passed = true; // Mark as passed
+                    fp_score++;
+                    fp_scoreDisplay.textContent = fp_score;
+                    if (audioInitialized) {
+                        // NEW: Nicer score sound
+                        flappyScoreSynth.triggerAttackRelease("C7", "32n");
+                    }
+                }
+                
+                // Add new pipe
+                if (fp_pipes[fp_pipes.length - 1].x < fp_canvas.width - 150) {
+                    fp_pipes.push({
+                        x: fp_canvas.width,
+                        w: 40,
+                        top: 0,
+                        bottom: Math.random() * (fp_canvas.height / 2) + 50
+                    });
+                }
+
+                // Remove off-screen pipes
+                if (pipe.x < -pipe.w) {
+                    fp_pipes.splice(i, 1);
+                }
+            }
+        }
+
+        function endFlappyPet() {
+            cancelAnimationFrame(fp_gameLoop);
+            fp_gameLoop = null;
+            if (audioInitialized) {
+                // NEW: Nicer crash sound
+                flappyCrashSynth.triggerAttackRelease("0.2");
+            }
+            
+            const pointsWon = fp_score >= 10 ? 1 : 0; // NEW: Pot point logic
+
+            fp_finalScore.textContent = `Your score: ${fp_score}`;
+            
+            if (pointsWon > 0) {
+                flappyPpReward.textContent = "+1 Pot Point!";
+                flappyPpReward.style.display = 'block';
+            } else {
+                flappyPpReward.style.display = 'none';
+            }
+            
+            fp_gameOverModal.style.display = 'flex';
+            
+            // Give rewards
+            petStats.happiness = Math.min(100, petStats.happiness + fp_score * 2); // 2 happiness per point
+            petStats.potPoints += pointsWon;
+            saveStats();
+            updateUI();
         }
 
         // --- Initialization ---
@@ -739,12 +1701,26 @@
             for (const petName in petOptions) {
                 const button = document.createElement('button');
                 button.className = "action-button w-full bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-6 px-4 rounded-xl shadow text-lg";
-                button.innerHTML = `${petOptions[petName].emoji} <br> ${petName}`;
-                // Add audio starter to button
+                
+                let buttonName = petName;
+                try {
+                    const loadedStats = JSON.parse(localStorage.getItem('potPetPalStats_' + petName));
+                    if (loadedStats && loadedStats.customName) {
+                        buttonName = loadedStats.customName;
+                    }
+                } catch (e) { /* ignore */ }
+                
+                button.innerHTML = `${petOptions[petName].emoji} <br> ${buttonName}`;
+                button.dataset.petname = petName;
+                
                 button.onclick = async () => {
-                    await startAudioContext(); // Ensure context is started and synths are ready
-                    if (petOptions[petName].sound) {
-                        petOptions[petName].sound(); // Now synths exist
+                    await startAudioContext();
+                    try {
+                        if (petOptions[petName].sound) {
+                            petOptions[petName].sound();
+                        }
+                    } catch (e) {
+                        console.error("Error playing sound:", e);
                     }
                     selectPet(petName);
                 };
@@ -752,10 +1728,11 @@
             }
             
             // Add event listeners
-            backButton.addEventListener('click', showHomeScreen);
-            feedButton.addEventListener('click', feedPet);
-            waterButton.addEventListener('click', giveWater);
-            playButton.addEventListener('click', showGameScreen);
+            backButton.addEventListener('click', () => showScreen('home-screen'));
+            feedButton.addEventListener('click', () => showScreen('food-selection-screen'));
+            waterButton.addEventListener('click', () => showScreen('drink-selection-screen'));
+            accessoryButton.addEventListener('click', () => showScreen('accessory-shop-screen')); // NEW
+            playButton.addEventListener('click', () => showScreen('game-selection-screen'));
             
             // Rename listeners
             editNameButton.addEventListener('click', () => toggleNameEdit(true));
@@ -764,12 +1741,13 @@
                 if (e.key === 'Enter') savePetName();
             });
             
-            // Game listeners
-            backToPetButton.addEventListener('click', () => showPetScreen(0)); // Back with no reward
-            modalBackToPetButton.addEventListener('click', () => showPetScreen(score)); // Back with score
-            playAgainButton.addEventListener('click', resetGame);
-            
-            // Flick listeners (native events for better performance)
+            // Penalty Game listeners
+            playAgainButton.addEventListener('click', resetPenaltyGame);
+            modalBackToGamesButton.addEventListener('click', () => {
+                penaltyGameOverModal.style.display = 'none';
+                const pointsWon = p_score > 1 ? 1 : 0; // NEW: Pot point logic
+                showScreen('game-selection-screen', p_score * 10, pointsWon);
+            });
             ball.addEventListener('mousedown', handleFlickStart, false);
             document.addEventListener('mouseup', handleFlickEnd, false);
             ball.addEventListener('touchstart', handleFlickStart, { passive: false });
@@ -790,16 +1768,15 @@
                 );
                 
                 if (petNameFromNfc) {
-                    // Make sure audio is ready before selecting pet
                     (async () => {
-                        await startAudioContext(); // Start audio on NFC load
+                        await startAudioContext();
                         selectPet(petNameFromNfc);
                     })();
                 } else {
-                    showHomeScreen();
+                    showScreen('home-screen');
                 }
             } else {
-                showHomeScreen();
+                showScreen('home-screen');
             }
         };
 
